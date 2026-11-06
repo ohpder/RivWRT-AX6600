@@ -139,6 +139,7 @@ jobs:
           if [[ "$WRT_PROFILE" == "PLUS" ]]; then
             echo "src-git passwall_packages https://github.com/Openwrt-Passwall/openwrt-passwall-packages" >> feeds.conf.default
           fi
+          echo "src-git athena_led https://github.com/perlyz/JDC-AX6600-Athena-LED-Controller-C.git" >> feeds.conf.default
 
       - name: Check Scripts
         run: |
