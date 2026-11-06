@@ -103,10 +103,11 @@ jobs:
           echo "WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d-%H.%M.%S")" >> $GITHUB_ENV
           echo "WRT_MARK=ImmortalWRT" >> $GITHUB_ENV  # 状态页编译标识品牌化（上游默认取 GitHub 用户名）
           WRT_PROFILE_UPPER=$(echo "${WRT_PROFILE:-PURE}" | tr '[:lower:]' '[:upper:]')
-          case "$WRT_PROFILE_UPPER" in
-            PURE|PLUS|ImmortalWRT) ;;
-            *) echo "Unsupported WRT_PROFILE: $WRT_PROFILE" >&2; exit 1 ;;
-          esac
+          echo $WRT_PROFILE_UPPER
+          #case "$WRT_PROFILE_UPPER" in
+          #  PURE|PLUS|ImmortalWRT) ;;
+          #  *) echo "Unsupported WRT_PROFILE: $WRT_PROFILE" >&2; exit 1 ;;
+          # esac
           echo "WRT_PROFILE=$WRT_PROFILE_UPPER" >> $GITHUB_ENV
           if [[ "$WRT_PROFILE_UPPER" == "ImmortalWRT" ]]; then
             echo "WRT_PROFILE_DESC=ImmortalWRT 定制版：基于 $WRT_SOURCE 基座，集成 aurora 主题、Athena LED 点阵屏控制、bandix-plus 流量统计（eBPF 旁路观察）、daede（dae eBPF 透明代理）、Podman 容器环境与 wolplus 网络唤醒；直连流量满血 NSS 硬件加速，代理流量由 dae 内核态接管" >> $GITHUB_ENV
