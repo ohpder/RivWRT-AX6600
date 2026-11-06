@@ -14,7 +14,7 @@
 #   mwan3 / luci-app-mwan3                         双 WAN 组件（当前停用）
 #
 # 新增组件：仿照下方 UPDATE_PACKAGE 调用（仓库/分支/提取模式），
-# 配套 CONFIG_PACKAGE_ 行加到 Config/GENERAL_AX6600_RIVWRT.txt。
+# 配套 CONFIG_PACKAGE_ 行加到 Config/GENERAL_AX6600_ImmortalWRT.txt。
 # =========================================================
 #!/bin/bash
 
