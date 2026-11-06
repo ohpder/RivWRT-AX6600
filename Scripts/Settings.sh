@@ -4,10 +4,10 @@
 # 由 WRT-CORE.yml 在 make defconfig 之前调用（cwd = wrt 源码树根）
 #
 # 本脚本产出的内容：
-#   /etc/uci-defaults  96-fullcone · 98-net-fix · 99-podman · 99-menus
+#   /etc/uci-defaults  96-fullcone · 98-wan6-fix · 99-podman · 99-menus
 #   /etc/init.d        rivwrt-wifi（三频固化，S99 自启）+ banner
 #   /package/          自建包：luci-app-rivwrt-nss · podman-compose
-#   树内补丁（白名单）：DTS 端口互换 · KERNEL_SIZE=12288k ·
+#   树内补丁（白名单）：KERNEL_SIZE=12288k ·
 #                      daede 暗色屏蔽 · 主题依赖/SSID/内存水位线
 #
 # 自建包清单与提取模式见本文件"组件注入"区块；
@@ -225,6 +225,8 @@ fi
 # 互换后：系统名 = 物理丝印 = 角色语义一致
 # -------------------------------------------------------
 
+# RivWRT 双 WAN 端口、网络与防火墙定制已暂停；保留代码供后续恢复。
+: <<'RIVWRT_DUAL_WAN_PORT_CONFIG_DISABLED'
 DTS_FILE="./target/linux/qualcommax/dts/ipq6010-re-cs-02.dts"
 
 # 端口命名最终形态（丝印 → 系统名）：
@@ -307,6 +309,7 @@ else
 	echo "RivWRT: ERROR - $FW_CFG not found" >&2
 	exit 1
 fi
+RIVWRT_DUAL_WAN_PORT_CONFIG_DISABLED
 
 
 # -------------------------------------------------------
@@ -323,6 +326,8 @@ CFG_JS=$(find ./package/luci-app-daede -name "config.js" 2>/dev/null | head -1)
 # 包已克隆到位）——配置随包走，首启即生效，无需再挂一条 uci-defaults。
 # -------------------------------------------------------
 
+# RivWRT 双 WAN 初始化配置已暂停；保留代码供后续恢复。
+: <<'RIVWRT_DUAL_WAN_MWAN3_CONFIG_DISABLED'
 MWAN3_DIR="./package/mwan3"
 if [ -d "$MWAN3_DIR/files/etc/config" ]; then
 	cat > "$MWAN3_DIR/files/etc/config/mwan3" <<'RIVWRT_MWAN3'
@@ -397,6 +402,7 @@ RIVWRT_MWAN3
 else
 	echo "RivWRT: WARNING - ./package/mwan3 not found, mwan3 config skipped"
 fi
+RIVWRT_DUAL_WAN_MWAN3_CONFIG_DISABLED
 
 
 # -------------------------------------------------------
@@ -515,6 +521,8 @@ fi
 # 形态（lan 用 ports 数组、wan/wan2 各用 device），避免同一端口既出现在某角色的
 # ports 里、又作为独立角色出现而重复显示。
 # -------------------------------------------------------
+# 双 WAN 专属端口角色补丁已暂停；保留代码供后续恢复。
+: <<'RIVWRT_DUAL_WAN_LUCI_PORTS_DISABLED'
 LUCI_RPCD_PLUGIN=$(find_in_feed 'luci-base[/\\]root[/\\]usr[/\\]share[/\\]rpcd[/\\]ucode[/\\]' 'luci')
 if [ -n "$LUCI_RPCD_PLUGIN" ]; then
 	sed -i "s|for (let k in \[ 'lan', 'wan' \])|for (let k in keys(board?.network ?? {}))|" "$LUCI_RPCD_PLUGIN"
@@ -528,6 +536,7 @@ else
 	echo "RivWRT: ERROR - 未在 ./feeds/luci 下找到 luci-base 的 rpcd ucode 插件（feeds 结构变了？）" >&2
 	exit 1
 fi
+RIVWRT_DUAL_WAN_LUCI_PORTS_DISABLED
 
 # -------------------------------------------------------
 # uci-defaults：FullCone NAT（IPv4）
@@ -544,6 +553,8 @@ chmod +x "$UDIR/96-rivwrt-fullcone"
 # uci-defaults：网络配置对新端口命名的纠正
 # -------------------------------------------------------
 
+# 双 WAN 接口迁移与 board.json 归一化已暂停；保留代码供后续恢复。
+: <<'RIVWRT_DUAL_WAN_NETFIX_DISABLED'
 cat > "$UDIR/98-rivwrt-net-fix" <<'RIVWRT_NETFIX'
 #!/bin/sh
 # RivWRT 网口规范化（幂等；由 uci-defaults 在每次首启/升级后执行一次）
@@ -677,6 +688,33 @@ if [ -f "$BOARD_JSON" ] && command -v ucode >/dev/null 2>&1; then
 fi
 RIVWRT_NETFIX
 chmod +x "$UDIR/98-rivwrt-net-fix"
+RIVWRT_DUAL_WAN_NETFIX_DISABLED
+
+# -------------------------------------------------------
+# uci-defaults：修正 qualcommax 首启时生成的不完整 wan6
+# -------------------------------------------------------
+
+cat > "$UDIR/98-rivwrt-wan6-fix" <<'RIVWRT_WAN6'
+#!/bin/sh
+# qualcommax 的 991_set-network.sh 会创建 wan6 并补 reqaddress/reqprefix，
+# 但可能没有 device/proto。先在 98 阶段补齐，避免留下不可用的空接口。
+if ! uci -q get network.wan6 >/dev/null 2>&1; then
+	uci -q set network.wan6=interface
+	uci -q set network.wan6.device='wan'
+	uci -q set network.wan6.proto='dhcpv6'
+else
+	_w6dev=$(uci -q get network.wan6.device)
+	case "$_w6dev" in
+		""|wan1|wan2) uci -q set network.wan6.device='wan' ;;
+	esac
+	_w6proto=$(uci -q get network.wan6.proto)
+	if [ -z "$_w6proto" ] || [ "$_w6proto" = "none" ]; then
+		uci -q set network.wan6.proto='dhcpv6'
+	fi
+fi
+uci commit network
+RIVWRT_WAN6
+chmod +x "$UDIR/98-rivwrt-wan6-fix"
 
 # -------------------------------------------------------
 # uci-defaults：podman API 服务默认关闭

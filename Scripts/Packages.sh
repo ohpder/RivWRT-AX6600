@@ -11,9 +11,7 @@
 #                 dae/daed/luci-app-daede/vmlinux-btf 四子包）
 #   partexp       sirpdboy/luci-app-partexp        分区扩容 Web 工具
 #   wolultra      ones20250/packages               网络唤醒（pkg-exact）
-#   mwan3         dl12345/mwan3                    多 WAN 负载均衡（nftables 版，
-#                 openwrt-25.12 分支；★ 非 feeds 里的 2.x iptables 旧版）
-#   luci-app-mwan3 dl12345/luci-app-mwan3          mwan3 界面（须与后端同源）
+#   mwan3 / luci-app-mwan3                         双 WAN 组件（当前停用）
 #
 # 新增组件：仿照下方 UPDATE_PACKAGE 调用（仓库/分支/提取模式），
 # 配套 CONFIG_PACKAGE_ 行加到 Config/GENERAL_AX6600_RIVWRT.txt。
@@ -154,11 +152,12 @@ UPDATE_PACKAGE "partexp" "sirpdboy/luci-app-partexp" "main" "pkg"
 #    下行的删除步骤按 *mwan3* 通配扫 feeds，会同时命中 feeds/packages/net/mwan3 与
 #    feeds/luci/applications/luci-app-mwan3，正好把旧版清掉（避免同名包双重定义）；
 #    它只扫 ../feeds/ 不扫当前目录，故不会误删刚克隆的包。
-UPDATE_PACKAGE "mwan3" "dl12345/mwan3" "openwrt-25.12"
+# Dual WAN 已停用；保留包来源记录，需要恢复时再取消注释。
+# UPDATE_PACKAGE "mwan3" "dl12345/mwan3" "openwrt-25.12"
 # RivWRT：mwan3 的 LuCI 界面（同作者的 nftables 移植版）
 # ★ 必须与后端同源：feeds 里的 luci-app-mwan3 配的是 2.x 的配置结构，
 #   与 3.6.12 的后端不匹配。
-UPDATE_PACKAGE "luci-app-mwan3" "dl12345/luci-app-mwan3" "openwrt-25.12"
+# UPDATE_PACKAGE "luci-app-mwan3" "dl12345/luci-app-mwan3" "openwrt-25.12"
 
 #UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"
 

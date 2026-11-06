@@ -38,7 +38,7 @@ Scripts/
   Packages.sh                 第三方组件拉取
   nss-page-test.js            NSS 加速页面回归测试（前端）
   nss-status-test.sh          NSS 状态采集回归测试（后端解析）
-  rivwrt-netfix-test.sh       网口规范化回归测试（接口迁移）
+  rivwrt-netfix-test.sh       wan6 首启修复回归测试
 Docs/           刷机救砖教程等
 .github/workflows/           云编译工作流
 ```
@@ -50,13 +50,13 @@ Docs/           刷机救砖教程等
 ```sh
 bun Scripts/nss-page-test.js      # 页面前端：轮询重绘、边界输入、状态渲染
 sh  Scripts/nss-status-test.sh    # 状态采集：debugfs 数据格式解析
-sh  Scripts/rivwrt-netfix-test.sh # 网口：br-lan 成员、旧接口名迁移
+sh  Scripts/rivwrt-netfix-test.sh # wan6 首启修复：默认值、旧接口名迁移、幂等
 ```
 
 它们直接从 `Settings.sh` 的 heredoc 里取出代码来跑（前端用 `bun`，后端用系统 `sh`），
 **不需要先编译固件**。存在的理由：这几处的 bug 几乎都在动态行为与格式假设上 ——
-轮询若干次后悬停层被清掉、单点历史算出 `NaN` 坐标、ECM 连接数数据源是文本而非数字、
-升级后接口名迁移没生效导致 mwan3 静默失效 —— 这些静态审阅看不出来，
+轮询若干次后悬停层被清掉、单点历史算出 `NaN` 坐标、ECM 连接数数据源是文本而非数字 ——
+这些静态审阅看不出来，
 构建与语法检查也发现不了。每个测试都用缺陷注入验证过（改回缺陷版本即失败）。
 
 ---
@@ -74,18 +74,10 @@ sh  Scripts/rivwrt-netfix-test.sh # 网口：br-lan 成员、旧接口名迁移
 | **wolultra 网络唤醒** | [ones20250/packages](https://github.com/ones20250/packages) | 上游 wolplus 继任包 |
 | **ksmbd 文件共享** | 上游 feeds | 内核态 SMB，替换基座 Samba4（省 34MB） |
 | **NSS 加速管理页** | 本项目自建 `luci-app-rivwrt-nss` | 引擎开关 + 频率档位 + 负载历史（2h/12h/1d/1w）+ 加速连接数 |
-| **mwan3 多 WAN** | [dl12345/mwan3](https://github.com/dl12345/mwan3) + [界面](https://github.com/dl12345/luci-app-mwan3) | 双宽带负载均衡/故障切换（**nftables 版 3.6.12**，见下方说明） |
 | **podman-compose** | 本项目自建包（PyPI 1.6.0） | CLI 容器编排 |
 | **statistics / vnstat** | 上游 feeds | 历史图表 / 接口流量总量 |
 
 基座沿用上游：**NSS 硬件加速全套**、**firewall4/nftables**、ath11k 三频、内存水位调优、自动挂载。
-
-> **mwan3 版本说明（勿混用）**：本项目用的是 dl12345 维护的 **nftables 移植版 3.6.12**，
-> 不是 OpenWrt/ImmortalWrt 官方 feed 里的 **2.12.2**。两者不可互换 ——
-> 官方版依赖 `iptables` + `ipset`，本固件是 fw4/nftables（树内无 iptables），
-> 装上会拖入整套兼容层并与 fw4 争抢 netfilter。3.6.12 已改为独立 `table inet mwan3`。
-> `Scripts/Packages.sh` 会在克隆新版前先删除 feeds 中的同名旧包，避免双重定义；
-> LuCI 界面也必须用同一作者的移植版，否则配置结构与后端不匹配。
 
 ---
 
@@ -93,8 +85,7 @@ sh  Scripts/rivwrt-netfix-test.sh # 网口：br-lan 成员、旧接口名迁移
 
 - **NSS 满血加速**：直连流量硬件转发（CPU 近零）；代理流量由 dae 内核态接管，互不抢道
 - **内核原生 BTF**：`CONFIG_DEBUG_INFO_BTF=y`，eBPF 程序开箱即用
-- **网口语义化**：DTS 层重命名端口，系统名 = 物理丝印 = 角色（见下表）
-- **双 WAN 就绪**：丝印 LAN1/LAN2 为 `wan1`/`wan2`，已装 mwan3（负载均衡/故障切换），接线配好协议即可启用
+- **单 WAN 默认布局**：沿用上游端口角色，2.5G 口为 WAN，LAN1-LAN4 为 LAN；双 WAN 定制已注释停用（见下表）
 - **FullCone NAT**：游戏机/P2P 友好，默认开启（防火墙页可关）
 - **eMMC 寿命关怀**：数据盘独立分区 + 每周 fstrim + 高频写服务默认关闭
 - **无默认密码**：登录与 WiFi 均默认开放，首刷请立即加固
@@ -105,16 +96,10 @@ sh  Scripts/rivwrt-netfix-test.sh # 网口：br-lan 成员、旧接口名迁移
 
 | 物理丝印 | 系统设备名 | 角色 |
 |---|---|---|
-| **2.5G**（原印 WAN） | `lan1` | **内网**（br-lan 成员） |
-| **LAN1**（千兆） | `wan1` | **WAN 1**（接第一条宽带） |
-| **LAN2**（千兆） | `wan2` | **WAN 2**（接第二条宽带） |
-| LAN3 / LAN4（千兆） | `lan3` / `lan4` | 内网 |
+| **WAN**（2.5G） | `wan` | **上行** |
+| LAN1-LAN4（千兆） | `lan1`-`lan4` | 内网 |
 
-> **两条宽带分别接丝印 LAN1 与 LAN2**；丝印 WAN 那个 2.5G 口是内网口。
-> 端口改名由 DTS 的 `label` 在构建期注入（`Settings.sh`），刷机即生效。
->
-> 保留配置升级时，旧的 `network.wan` 会在首启由 `98-rivwrt-net-fix` 自动迁移为
-> `network.wan1`（并补建 `wan2`）——不迁移的话 mwan3 找不到要管理的接口。
+> 双 WAN 端口改名、网络注入和 mwan3 配置目前均已在构建脚本中注释停用。
 
 ---
 
@@ -162,7 +147,9 @@ sh  Scripts/rivwrt-netfix-test.sh # 网口：br-lan 成员、旧接口名迁移
 ## 📖 使用指南
 
 <details>
-<summary><b>多 WAN（双宽带负载均衡 / 故障切换）</b></summary>
+<summary><b>多 WAN（已停用）</b></summary>
+
+<!-- 历史配置说明保留，当前构建不包含以下双 WAN 配置。
 
 固件已装 **mwan3 3.6.12**（nftables 版）+ 其 LuCI 界面。界面有**两个入口**：
 
@@ -210,6 +197,9 @@ sh  Scripts/rivwrt-netfix-test.sh # 网口：br-lan 成员、旧接口名迁移
   `wan_interface: wan1, wan2`**，否则 dae 可能只认一条出口。
   dae 的 eBPF 分流与 mwan3 的 fwmark 标记理论上是两个维度（前者"走不走代理"、
   后者"走哪条宽带"），若实测有冲突，调整 mwan3 的 `mmx_mask`（默认 `0x3F00`）。
+-->
+
+双 WAN 端口映射、mwan3 与对应的首启配置目前均已在构建脚本中注释停用，固件按上游默认单 WAN 布局生成。
 
 </details>
 
