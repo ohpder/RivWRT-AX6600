@@ -83,6 +83,7 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
+          sudo -E apt -yqq purge firefox
           sudo -E apt -yqq update
           sudo apt full-upgrade -y
           sudo -E apt -yqq install build-essential \
