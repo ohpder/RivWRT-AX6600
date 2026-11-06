@@ -63,14 +63,6 @@ CONFIG_PACKAGE_luci-app-bandix-plus=y
 CONFIG_PACKAGE_dae=y
 CONFIG_PACKAGE_luci-app-daede=y
 
-# -----------------
-# Podman 容器环境（连带 veth 内核支持，覆盖基座 kmod-veth=n）
-# 只装环境，不默认跑任何容器；容器数据建议落 eMMC 独立分区
-# -----------------
-CONFIG_PACKAGE_podman=y
-# compose 编排（CLI 使用：podman-compose up -d）
-CONFIG_PACKAGE_podman-compose=y
-CONFIG_PACKAGE_kmod-veth=y
 
 # -----------------
 # IPv6（基座 ImmortalWrt 默认已含，显式声明保证开启）
@@ -100,35 +92,7 @@ CONFIG_PACKAGE_rrdtool1=y
 # NSS 加速管理页（自建包：开关 + 每 Core 负载）
 CONFIG_PACKAGE_luci-app-rivwrt-nss=y
 
-# -----------------
-# 多 WAN：mwan3 负载均衡 / 故障切换（双宽带）
-#
-# ★ 这两个包【不来自 feeds】，由 Scripts/Packages.sh 从 dl12345 克隆
-#   （openwrt-25.12 分支，mwan3 3.6.12 = nftables + ucode 移植版）。
-#   feeds 里的是 2.12.2（iptables + ipset），与本固件的 fw4/nftables 不合，
-#   Packages.sh 的删除步骤已把 feeds 中的旧版清掉 —— 若在此处误用旧版，
-#   会拖入整套 iptables 兼容层。
-#
-# 依赖由 +DEPENDS 自动带入，无需在此列举：
-#   ip-full · kmod-nft-core · nftables-json · libnetfilter-conntrack
-#   rpcd-mod-ucode · jshn · ucode · ucode-mod-{rtnl,uloop,uci,ubus,fs,socket,log}
-#
-# 网口：物理丝印 LAN2（dp2）在 DTS 中已改名 wan2，与 wan（丝印 LAN1）构成双 WAN。
-# 默认规则未启用（mwan3 不接管流量），接线后在界面里启用即可，详见 README。
-# -----------------
-CONFIG_PACKAGE_mwan3=y
-CONFIG_PACKAGE_luci-app-mwan3=y
 
-# -----------------
-# 文件共享：ksmbd（内核态 SMB，替换基座的 Samba4）
-# 1G RAM 设备省 ~34MB 常驻（smbd/nmbd/notifyd/cleanupd 全家），
-# eMMC 大文件共享吞吐更高；代价：无打印共享/域控、macOS Time Machine 支持有限
-# 基座 GENERAL_AX6600.txt 中的 luci-app-samba4=y 在此覆盖关闭
-# -----------------
-CONFIG_PACKAGE_luci-app-samba4=n
-CONFIG_PACKAGE_samba4-server=n
-CONFIG_PACKAGE_ksmbd-server=y
-CONFIG_PACKAGE_luci-app-ksmbd=y
 
 # -----------------
 # 网络唤醒补充：上游 wolplus 已换代为 wolultra（基座的 luci-app-wolplus=y 成死行），
