@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /*
- * RivWRT NSS 加速页面的回归测试。
+ * ImmortalWRT NSS 加速页面的回归测试。
  *
  * 用法：  bun Scripts/nss-page-test.js
  *
@@ -30,7 +30,7 @@ const shPath = process.argv[2] ?? `${here}/Settings.sh`;
 function extractPageSource(sh) {
 	const norm = sh.replace(/\r\n/g, '\n');
 	const m = norm.match(
-		/cat > \$PKGDIR\/root\/www\/luci-static\/resources\/view\/rivwrt\/nss\.js <<'EOF'\n([\s\S]*?)\nEOF\n/
+		/cat > \$PKGDIR\/root\/www\/luci-static\/resources\/view\/ImmortalWRT\/nss\.js <<'EOF'\n([\s\S]*?)\nEOF\n/
 	);
 	if (!m) throw new Error(`未能从 ${shPath} 提取 nss.js（heredoc 标记变了？）`);
 	return m[1];
@@ -131,7 +131,7 @@ const rpc = {
 	declare: (o) => function (...args) {
 		if (o.object === 'file' && o.method === 'exec') {
 			if (EXEC_FAIL) return Promise.reject(new Error('Access denied'));
-			if (args[0] === '/usr/libexec/rivwrt/nss-status')
+			if (args[0] === '/usr/libexec/ImmortalWRT/nss-status')
 				return Promise.resolve({ code: 0, stdout: STATUS, stderr: '' });
 			return Promise.resolve({ code: 0, stdout: '', stderr: '' });
 		}

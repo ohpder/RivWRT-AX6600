@@ -1,7 +1,7 @@
 #!/bin/sh
-# RivWRT wan6 修复的回归测试（针对 uci-defaults/98-rivwrt-wan6-fix）。
+# ImmortalWRT wan6 修复的回归测试（针对 uci-defaults/98-ImmortalWRT-wan6-fix）。
 #
-# 用法：  sh Scripts/rivwrt-netfix-test.sh
+# 用法：  sh Scripts/ImmortalWRT-netfix-test.sh
 #
 # 被测脚本负责修正 qualcommax 首启时可能生成的不完整 wan6 接口：补齐默认
 # device=wan 与 proto=dhcpv6，同时保留用户明确设置的其它 device/proto。
@@ -39,12 +39,12 @@ trap 'rm -rf "$MOCK"' EXIT INT TERM HUP
 # ── 从 Settings.sh 抽取 uci-defaults 脚本正文 ──
 SCRIPT="$MOCK/netfix.sh"
 awk '
-	/cat > "\$UDIR\/98-rivwrt-wan6-fix" <<.RIVWRT_WAN6./ { f = 1; next }
-	f && /^RIVWRT_WAN6$/ { exit }
+	/cat > "\$UDIR\/98-ImmortalWRT-wan6-fix" <<.ImmortalWRT_WAN6./ { f = 1; next }
+	f && /^ImmortalWRT_WAN6$/ { exit }
 	f { print }
 ' "$SH" > "$SCRIPT"
 
-[ -s "$SCRIPT" ] || { echo "✗ 未能从 Settings.sh 提取 98-rivwrt-wan6-fix（heredoc 标记变了？）"; exit 1; }
+[ -s "$SCRIPT" ] || { echo "✗ 未能从 Settings.sh 提取 98-ImmortalWRT-wan6-fix（heredoc 标记变了？）"; exit 1; }
 grep -q 'network\.wan6' "$SCRIPT" || { echo "✗ 提取内容与预期不符"; exit 1; }
 
 # ── mock uci：配置存为 key=value 行 ──

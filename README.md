@@ -1,6 +1,6 @@
 <div align="center">
 
-# $\color{red}{\rule{0.314em}{0.75em}}\$ RivWRT
+# $\color{red}{\rule{0.314em}{0.75em}}\$ ImmortalWRT
 
 **AX6600 雅典娜 · 个人定制固件**
 
@@ -31,14 +31,14 @@
 ```
 Config/         编译配置片段（按 profile 拼接，非完整 .config）
   GENERAL_AX6600.txt          上游通用配置
-  GENERAL_AX6600_RIVWRT.txt   RivWRT 增量（组件开关）
+  GENERAL_AX6600_ImmortalWRT.txt   ImmortalWRT 增量（组件开关）
   IPQ60XX-WIFI-YES.txt        目标平台与设备
 Scripts/
   Settings.sh                 构建期注入总入口（CI 唯一调用点）
   Packages.sh                 第三方组件拉取
   nss-page-test.js            NSS 加速页面回归测试（前端）
   nss-status-test.sh          NSS 状态采集回归测试（后端解析）
-  rivwrt-netfix-test.sh       wan6 首启修复回归测试
+  ImmortalWRT-netfix-test.sh       wan6 首启修复回归测试
 Docs/           刷机救砖教程等
 .github/workflows/           云编译工作流
 ```
@@ -50,7 +50,7 @@ Docs/           刷机救砖教程等
 ```sh
 bun Scripts/nss-page-test.js      # 页面前端：轮询重绘、边界输入、状态渲染
 sh  Scripts/nss-status-test.sh    # 状态采集：debugfs 数据格式解析
-sh  Scripts/rivwrt-netfix-test.sh # wan6 首启修复：默认值、旧接口名迁移、幂等
+sh  Scripts/ImmortalWRT-netfix-test.sh # wan6 首启修复：默认值、旧接口名迁移、幂等
 ```
 
 它们直接从 `Settings.sh` 的 heredoc 里取出代码来跑（前端用 `bun`，后端用系统 `sh`），
@@ -73,7 +73,7 @@ sh  Scripts/rivwrt-netfix-test.sh # wan6 首启修复：默认值、旧接口名
 | **partexp 分区管理** | [sirpdboy/luci-app-partexp](https://github.com/sirpdboy/luci-app-partexp) | Web 一键格式化/扩容/挂载 |
 | **wolultra 网络唤醒** | [ones20250/packages](https://github.com/ones20250/packages) | 上游 wolplus 继任包 |
 | **ksmbd 文件共享** | 上游 feeds | 内核态 SMB，替换基座 Samba4（省 34MB） |
-| **NSS 加速管理页** | 本项目自建 `luci-app-rivwrt-nss` | 引擎开关 + 频率档位 + 负载历史（2h/12h/1d/1w）+ 加速连接数 |
+| **NSS 加速管理页** | 本项目自建 `luci-app-ImmortalWRT-nss` | 引擎开关 + 频率档位 + 负载历史（2h/12h/1d/1w）+ 加速连接数 |
 | **podman-compose** | 本项目自建包（PyPI 1.6.0） | CLI 容器编排 |
 | **statistics / vnstat** | 上游 feeds | 历史图表 / 接口流量总量 |
 
@@ -108,17 +108,17 @@ sh  Scripts/rivwrt-netfix-test.sh # wan6 首启修复：默认值、旧接口名
 | 项 | 值 |
 |----|----|
 | 管理地址 | `192.168.100.1` |
-| 主机名 | `RivWRT` |
+| 主机名 | `ImmortalWRT` |
 | 登录密码 | 默认无（**首刷请立即设置**） |
 | WiFi | 三 SSID 分频，**默认开放**（见下） |
 
 | SSID | 频段 | 信道 | 带宽 |
 |---|---|---|---|
-| `RivWRT-2.4G` | 2.4G | 11 | 20MHz |
-| `RivWRT-5.2G` | 5G 游戏段（4×4） | 44 | 160MHz |
-| `RivWRT-5.8G` | 5G 影音段 | 149 | 80MHz |
+| `ImmortalWRT-2.4G` | 2.4G | 11 | 20MHz |
+| `ImmortalWRT-5.2G` | 5G 游戏段（4×4） | 44 | 160MHz |
+| `ImmortalWRT-5.8G` | 5G 影音段 | 149 | 80MHz |
 
-通用：地区 US · 功率 24dBm（ones20250 官方推荐）。首次启动由 `rivwrt-wifi` 服务自动固化（按总线自动区分 5G 频段，探测失败回落非 DFS 安全值）。
+通用：地区 US · 功率 24dBm（ones20250 官方推荐）。首次启动由 `ImmortalWRT-wifi` 服务自动固化（按总线自动区分 5G 频段，探测失败回落非 DFS 安全值）。
 
 ---
 
@@ -137,7 +137,7 @@ sh  Scripts/rivwrt-netfix-test.sh # wan6 首启修复：默认值、旧接口名
 > regdb patch、`nss_freq`/`nss_diag`）都在这条 fork 链上，且 `Settings.sh` 的每处 sed
 > 目标都有对应断言，若不匹配会直接报错而非静默失效。
 
-- 固件命名：`RivWRT-时间-ipq60xx-jdcloud_re-cs-02-squashfs-factory/sysupgrade.bin`
+- 固件命名：`ImmortalWRT-时间-ipq60xx-jdcloud_re-cs-02-squashfs-factory/sysupgrade.bin`
 - 适配分区：**12MiB 内核 + 2GiB rootfs**（chenxin527 GPT，A 槽）
 - 首刷走 U-Boot Web 上传 `factory`；系统内升级用 `sysupgrade`（独立数据分区不受影响）
 - 详细流程：[Docs/刷机救砖教程.md](Docs/刷机救砖教程.md)
@@ -266,7 +266,7 @@ podman-compose up -d
 <details>
 <summary><b>登录横幅</b></summary>
 
-SSH 登录显示点阵 RivWRT 标志 + 项目格言 + 组件清单，由 `Settings.sh` 构建期生成（`/etc/banner`）。
+SSH 登录显示点阵 ImmortalWRT 标志 + 项目格言 + 组件清单，由 `Settings.sh` 构建期生成（`/etc/banner`）。
 
 </details>
 

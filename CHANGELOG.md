@@ -1,23 +1,23 @@
-# RivWRT AX6600 更新记录
+# ImmortalWRT AX6600 更新记录
 
-## 2026-09-11 · 基于 ones20250 纯净版重建（RivWRT v1）
+## 2026-09-11 · 基于 ones20250 纯净版重建（ImmortalWRT v1）
 
-本次为全量重写：上游编译机制原样保留，定制全部收敛到 RIVWRT 单 profile。
+本次为全量重写：上游编译机制原样保留，定制全部收敛到 ImmortalWRT 单 profile。
 
 ### 修复
 
-- `QCA-ALL.yml`：还原上游骨架并改为单 matrix（`PROFILE: [RIVWRT]`）。
-  此前 fork 的 `PROFILE: RIVWRT` 未同步 `WRT-CORE.yml` 白名单，触发 `exit 1`，一跑即失败。
+- `QCA-ALL.yml`：还原上游骨架并改为单 matrix（`PROFILE: [ImmortalWRT]`）。
+  此前 fork 的 `PROFILE: ImmortalWRT` 未同步 `WRT-CORE.yml` 白名单，触发 `exit 1`，一跑即失败。
 - 移除 GPT 残留的格式错误配置（裸包名列表，不符合 `.config` 片段的 `CONFIG_*` 格式）。
 
 ### 工作流
 
-- `WRT-CORE.yml`：profile 白名单加入 `RIVWRT`；固件命名改为
-  `RivWRT-时间-ipq60xx-jdcloud_re-cs-02-*.bin`；Release 文案更新为 RivWRT 组件清单。
-- `WRT-TEST.yml`：PROFILE 选项与默认值改为 RIVWRT，默认参数与正式编译一致。
-- 默认值：主机名/SSID `RivWRT`、管理地址 `192.168.100.1`、默认主题 aurora；WiFi 默认开放（无密码）。
+- `WRT-CORE.yml`：profile 白名单加入 `ImmortalWRT`；固件命名改为
+  `ImmortalWRT-时间-ipq60xx-jdcloud_re-cs-02-*.bin`；Release 文案更新为 ImmortalWRT 组件清单。
+- `WRT-TEST.yml`：PROFILE 选项与默认值改为 ImmortalWRT，默认参数与正式编译一致。
+- 默认值：主机名/SSID `ImmortalWRT`、管理地址 `192.168.100.1`、默认主题 aurora；WiFi 默认开放（无密码）。
 
-### 组件（Scripts/Packages.sh RivWRT 注入块）
+### 组件（Scripts/Packages.sh ImmortalWRT 注入块）
 
 - aurora 主题（eamonxg 版）+ 编译期默认主题替换（Settings.sh）
 - Athena LED 点阵屏控制：回退上游树内官方版 `luci-app-athena-led`
@@ -25,7 +25,7 @@
 - bandix-plus 流量统计（后端 + LuCI 前端，eBPF 旁路观察定位）
 - daede 透明代理（dae + daed + luci-app-daede 一体包，pkg 模式提取三子包）
 
-### 配置（Config/GENERAL_AX6600_RIVWRT.txt 新增）
+### 配置（Config/GENERAL_AX6600_ImmortalWRT.txt 新增）
 
 - 显式开启：dae / luci-app-daede / bandix-plus 双包 / luci-theme-aurora / luci-app-athena-led
 - Podman 容器环境（kmod-veth 覆盖基座 =n）、IPv6（odhcp6c / odhcpd-ipv6only）
@@ -36,7 +36,7 @@
 
 - NSS 优先：直连流量满血硬件加速；dae 代理流量内核态接管，二者天然分工。
 - bandix 纯观察：不影响转发性能；精确报表需临时停用 NSS ecm（README 有操作说明）。
-- Config/GENERAL_AX6600_PLUS.txt 与 GPT 版 RIVWRT_AX6600.txt 已删除；Docs 三个半成品文档已删除，
+- Config/GENERAL_AX6600_PLUS.txt 与 GPT 版 ImmortalWRT_AX6600.txt 已删除；Docs 三个半成品文档已删除，
   保留上游原文《刷机救砖教程.md》。
 
 ---
@@ -47,11 +47,11 @@
 
 - `Settings.sh`：UDIR 变量未定义（删网口互换块时误删定义）→
   所有 uci-defaults 写根目录失败，菜单归拢/FullCone/podman 关闭/网络纠正全部未生效（模拟树验证修复）
-- 无线 init.d 缺 rc.d 启用链接 → 三频固化未执行（补 S99rivwrt-wifi 链接）
+- 无线 init.d 缺 rc.d 启用链接 → 三频固化未执行（补 S99ImmortalWRT-wifi 链接）
 - 无线 init.d：jsonfilter -s 误用（应 -i）→ 5G 频段探测失败；
   加固：探测失败回落 149/HT80 非 DFS 安全值，不残留生成器的 DFS 默认信道
 - NSS 页面 JS：重复定义 render + fs.exec 参数误用 → 重写（bun 语法校验）
-- Config 漏 `CONFIG_PACKAGE_luci-app-rivwrt-nss=y` → NSS 页面未进固件（已补）
+- Config 漏 `CONFIG_PACKAGE_luci-app-ImmortalWRT-nss=y` → NSS 页面未进固件（已补）
 - `podman-compose`：上游 immortalwrt/packages 无此包（死配置行）→
   自建 PyPI 打包（1.6.0 sdist + sha256 钉死，依赖 python3-yaml/dotenv）
 
@@ -59,13 +59,13 @@
 
 - DTS 端口 label 互换（wan↔lan1）：系统名 = 物理丝印 = 角色语义一致；
   弃 uci-defaults 网口互换方案（实测拔插确认丝印 WAN=dp5、丝印 LAN1=dp1）
-- 网络配置纠正 uci-defaults（98-rivwrt-net-fix）：兼容旧命名配置升级
+- 网络配置纠正 uci-defaults（98-ImmortalWRT-net-fix）：兼容旧命名配置升级
 - ksmbd 替换 Samba4（省 ~34MB 常驻；上游无打印/域控需求，纯收益）
-- `CONFIG_VERSION_DIST="RivWRT"`：banner/openwrt_release/系统 ID 品牌化
+- `CONFIG_VERSION_DIST="ImmortalWRT"`：banner/openwrt_release/系统 ID 品牌化
 - `CONFIG_DEBUG_INFO_BTF=y`：内核原生 BTF（vmlinux-btf 包仍作 dae 依赖兜底）
 - podman API 服务默认关闭（省 ~45MB；podman 包 init 无条件常驻 system service）
 - banner：figlet 字样 + 项目格言 "Flow downstream, not upstream."
-- FullCone NAT 固化开启（96-rivwrt-fullcone）
+- FullCone NAT 固化开启（96-ImmortalWRT-fullcone）
 - 分区适配：KERNEL_SIZE=12288k（实测 A 槽 0:HLOS=12288KB，GPT 对齐）
 
 ### 文档
@@ -82,11 +82,11 @@
 - **根因**：ath11k 的 phy 级 regd 更新走 workqueue，三个 radio 并发启动时相互竞争，
   部分 phy 更新失败（日志实证 `hostapd: Frequency 5180/5745 is not allowed`），
   导致两个 5G 起不来；重启一次即恢复。
-- **改法**：`rivwrt-wifi` 改为「参数比对 → 对未就绪的 radio 逐个串行重启 → 仍不行则兜底重启一次」，并用
-  `/etc/.rivwrt-wifi-rebooted` 守卫防止无限重启循环。
+- **改法**：`ImmortalWRT-wifi` 改为「参数比对 → 对未就绪的 radio 逐个串行重启 → 仍不行则兜底重启一次」，并用
+  `/etc/.ImmortalWRT-wifi-rebooted` 守卫防止无限重启循环。
   ★ 不可用 `wifi reload` 重试——读 `/sbin/wifi` 源码可知它忽略设备参数、执行全量
   `ubus call network reload`，会把三个 radio 一起重启，反而加剧竞争。
-- SSID：2.4G 改为 `RivWRT-2.4G`（三频分名一致）
+- SSID：2.4G 改为 `ImmortalWRT-2.4G`（三频分名一致）
 
 ### NSS 加速页
 
@@ -144,7 +144,7 @@
   该函数见空格即走 `json_select_array "ports"`，会把两个口桥成一个 WAN。
 - 防火墙：zone **名保持 `wan`**（`firewall.config` 里有 11 处 `option src/dest 'wan'`
   引用它），只把 `list network` 由 `'wan'` 换成 `'wan1' 'wan2'`。
-- `98-rivwrt-net-fix` 重写为幂等的网口规范化脚本：剔除 br-lan 里的 lan2、
+- `98-ImmortalWRT-net-fix` 重写为幂等的网口规范化脚本：剔除 br-lan 里的 lan2、
   把旧 `network.wan` 迁移为 `network.wan1`、补建 `wan2`。
   迁移是为了**保留配置升级**：不迁移则 mwan3 找不到 wan1，静默失效。
 
@@ -170,7 +170,7 @@
 
 ### 测试
 
-- 新增 `Scripts/rivwrt-netfix-test.sh`（14 项）：覆盖新刷机、保留配置升级、
+- 新增 `Scripts/ImmortalWRT-netfix-test.sh`（14 项）：覆盖新刷机、保留配置升级、
   幂等、wan6 处理四种场景。已用缺陷注入验证有效性（去掉迁移或去掉 br-lan
   剔除即失败）。
 - 过程中修掉自己的 mock 两处错误，值得记录：① 函数末尾 `return 0` 会覆盖
@@ -249,4 +249,4 @@ kernel-version.mk、feeds.conf.default 等）**全部 md5 相同**。
 ## 上游历史（fork 自 ones20250/Openwrt-AX6600）
 
 上游按 PURE（纯净）/ PLUS（预装 OpenClash、PassWall2、Docker 等）双版本发布，机制详见上游仓库。
-本仓库不再构建 PURE/PLUS，仅维护 RivWRT 定制版。
+本仓库不再构建 PURE/PLUS，仅维护 ImmortalWRT 定制版。

@@ -1,12 +1,12 @@
 #!/bin/bash
 # =========================================================
-# RivWRT 构建期定制脚本
+# ImmortalWRT 构建期定制脚本
 # 由 WRT-CORE.yml 在 make defconfig 之前调用（cwd = wrt 源码树根）
 #
 # 本脚本产出的内容：
 #   /etc/uci-defaults  96-fullcone · 98-wan6-fix · 99-podman · 99-menus
-#   /etc/init.d        rivwrt-wifi（三频固化，S99 自启）+ banner
-#   /package/          自建包：luci-app-rivwrt-nss · podman-compose
+#   /etc/init.d        ImmortalWRT-wifi（三频固化，S99 自启）+ banner
+#   /package/          自建包：luci-app-ImmortalWRT-nss · podman-compose
 #   树内补丁（白名单）：KERNEL_SIZE=12288k ·
 #                      daede 暗色屏蔽 · 主题依赖/SSID/内存水位线
 #
@@ -98,7 +98,7 @@ if [ -f "$WIFI_UC" ]; then
 	sed -i "s#^set \${si}\.encryption=.*#set \${si}.encryption='none'#" "$WIFI_UC"
 	sed -i "s#^set \${si}\.key=.*#set \${si}.key=''#" "$WIFI_UC"
 
-	echo "RivWRT: per-band SSID + channel + htmode + country + txpower + encryption injected"
+	echo "ImmortalWRT: per-band SSID + channel + htmode + country + txpower + encryption injected"
 fi
 
 # -------------------------------------------------------
@@ -113,15 +113,15 @@ echo "CONFIG_PACKAGE_luci=y" >> ./.config
 echo "CONFIG_LUCI_LANG_zh_Hans=y" >> ./.config
 
 # -------------------------------------------------------
-# RivWRT 增量配置兜底拼接（不依赖 workflow 层的 WRT_EXTRA_CONFIG）
-# 实测 6dfacd3 固件：VERSION_DIST 与 rivwrt-nss 行均未生效，而同在
+# ImmortalWRT 增量配置兜底拼接（不依赖 workflow 层的 WRT_EXTRA_CONFIG）
+# 实测 6dfacd3 固件：VERSION_DIST 与 ImmortalWRT-nss 行均未生效，而同在
 # 基座 GENERAL_AX6600.txt 的 qca-nss-ecm 生效 → 疑似增量文件未被拼接。
 # 这里无条件再拼一次（kconfig 对重复行取最后值，幂等安全）。
 # -------------------------------------------------------
-RIVWRT_CFG="$GITHUB_WORKSPACE/Config/GENERAL_AX6600_RIVWRT.txt"
-if [ -f "$RIVWRT_CFG" ]; then
-	cat "$RIVWRT_CFG" >> ./.config
-	echo "RivWRT: increment config appended (fallback, $(grep -c '^CONFIG' "$RIVWRT_CFG") lines)"
+ImmortalWRT_CFG="$GITHUB_WORKSPACE/Config/GENERAL_AX6600_ImmortalWRT.txt"
+if [ -f "$ImmortalWRT_CFG" ]; then
+	cat "$ImmortalWRT_CFG" >> ./.config
+	echo "ImmortalWRT: increment config appended (fallback, $(grep -c '^CONFIG' "$ImmortalWRT_CFG") lines)"
 fi
 
 # -------------------------------------------------------
@@ -158,11 +158,11 @@ else
 fi
 
 # -------------------------------------------------------
-# RivWRT：登录 banner（figlet 字样 + 格言 + 组件行）
+# ImmortalWRT：登录 banner（figlet 字样 + 格言 + 组件行）
 # -------------------------------------------------------
 
 BANNER="./package/base-files/files/etc/banner"
-[ -f "$BANNER" ] && cat > "$BANNER" <<'RIVWRT_BANNER'
+[ -f "$BANNER" ] && cat > "$BANNER" <<'ImmortalWRT_BANNER'
 '||''|.    ||           '|| '||'  '|' '||''|.   |''||''| 
  ||   ||  ...  .... ...  '|. '|.  .'   ||   ||     ||    
  ||''|'    ||   '|.  |    ||  ||  |    ||''|'      ||    
@@ -172,23 +172,23 @@ BANNER="./package/base-files/files/etc/banner"
            " Flow downstream, not upstream. "
 
  =======================================================
-   RivWRT - based on ones20250/Openwrt-AX6600
+   ImmortalWRT - based on ones20250/Openwrt-AX6600
    aurora / athena-led / bandix-plus / daede / nss
    ImmortalWrt %V, %C
  =======================================================
-RIVWRT_BANNER
+ImmortalWRT_BANNER
 
 # -------------------------------------------------------
-# RivWRT：openwrt_release 品牌硬钉（不依赖 kconfig 的 VERSION_DIST）
+# ImmortalWRT：openwrt_release 品牌硬钉（不依赖 kconfig 的 VERSION_DIST）
 # CONFIG_VERSION_DIST 的 prompt 挂在 "if DEVEL" 下，defconfig 可能丢弃
 # 用户值回落 default "ImmortalWRT"（实测 6dfacd3 固件未生效）。
 # 故直接改 base-files 的 openwrt_release 模板：DISTRIB_ID/DESCRIPTION
-# 硬编码 RivWRT，%V/%C 仍由构建系统展开（版本号/revision 照常显示）。
+# 硬编码 ImmortalWRT，%V/%C 仍由构建系统展开（版本号/revision 照常显示）。
 # 该模板会被 VERSION_SED 处理，属官方机制内的注入点，升级安全。
 # -------------------------------------------------------
 RELEASE_FILE="./package/base-files/files/etc/openwrt_release"
 if [ -f "$RELEASE_FILE" ]; then
-	sed -i "s/^DISTRIB_ID=.*/DISTRIB_ID='RivWRT'/" "$RELEASE_FILE"
+	sed -i "s/^DISTRIB_ID=.*/DISTRIB_ID='ImmortalWRT'/" "$RELEASE_FILE"
 	# 把构建时间戳一并写进版本描述：设备上 `cat /etc/openwrt_release` 或
 	# LuCI 概览页即可直接核对刷的是哪个 release（与 release tag / 固件文件名
 	# 里的时间戳是同一个值，来自 CI 的 WRT_DATE）。
@@ -197,11 +197,11 @@ if [ -f "$RELEASE_FILE" ]; then
 	# "新代码没生效"排查了很久。有了这个时间戳，一眼可辨。
 	# WRT_DATE 缺失时（本地模拟）退回 dev，不留空括号。
 	BUILD_TAG="${WRT_DATE:-dev}"
-	sed -i "s/^DISTRIB_DESCRIPTION=.*/DISTRIB_DESCRIPTION='RivWRT %V %C build-${BUILD_TAG}'/" "$RELEASE_FILE"
-	echo "RivWRT: openwrt_release branded (DISTRIB_ID/DESCRIPTION, build=$BUILD_TAG)"
+	sed -i "s/^DISTRIB_DESCRIPTION=.*/DISTRIB_DESCRIPTION='ImmortalWRT %V %C build-${BUILD_TAG}'/" "$RELEASE_FILE"
+	echo "ImmortalWRT: openwrt_release branded (DISTRIB_ID/DESCRIPTION, build=$BUILD_TAG)"
 fi
 # -------------------------------------------------------
-# RivWRT：内核分区尺寸适配（A 槽 12MiB 内核）
+# ImmortalWRT：内核分区尺寸适配（A 槽 12MiB 内核）
 # -------------------------------------------------------
 
 IMG_MK="./target/linux/qualcommax/image/ipq60xx.mk"
@@ -212,21 +212,21 @@ if [ -f "$IMG_MK" ]; then
 	# 一个按 6MiB 分区布局的固件，刷进去与设备的 12MiB 内核分区不匹配。
 	if awk '/Device\/jdcloud_re-cs-02/,/TARGET_DEVICES \+= jdcloud_re-cs-02/' "$IMG_MK" \
 		| grep -q 'KERNEL_SIZE := 12288k'; then
-		echo "RivWRT: KERNEL_SIZE -> 12288k (A槽 12MiB 内核分区)"
+		echo "ImmortalWRT: KERNEL_SIZE -> 12288k (A槽 12MiB 内核分区)"
 	else
-		echo "RivWRT: ERROR - KERNEL_SIZE patch missed in $IMG_MK (设备段结构变了？)" >&2
+		echo "ImmortalWRT: ERROR - KERNEL_SIZE patch missed in $IMG_MK (设备段结构变了？)" >&2
 		exit 1
 	fi
 fi
 
 # -------------------------------------------------------
-# RivWRT：DTS 端口 label 互换（根治网口互换）
+# ImmortalWRT：DTS 端口 label 互换（根治网口互换）
 # 实测映射：丝印 WAN(2.5G)=dp5(wan)，丝印 LAN1=dp1(lan1)
 # 互换后：系统名 = 物理丝印 = 角色语义一致
 # -------------------------------------------------------
 
-# RivWRT 双 WAN 端口、网络与防火墙定制已暂停；保留代码供后续恢复。
-: <<'RIVWRT_DUAL_WAN_PORT_CONFIG_DISABLED'
+# ImmortalWRT 双 WAN 端口、网络与防火墙定制已暂停；保留代码供后续恢复。
+: <<'ImmortalWRT_DUAL_WAN_PORT_CONFIG_DISABLED'
 DTS_FILE="./target/linux/qualcommax/dts/ipq6010-re-cs-02.dts"
 
 # 端口命名最终形态（丝印 → 系统名）：
@@ -256,9 +256,9 @@ dts_label() {
 	awk "/^&$1 \{/,/^};/" "$DTS_FILE" | sed -n 's/.*label = "\([^"]*\)".*/\1/p' | head -1
 }
 if [ "$(dts_label dp1)" = "wan1" ] && [ "$(dts_label dp2)" = "wan2" ] && [ "$(dts_label dp5)" = "lan1" ]; then
-	echo "RivWRT: DTS port labels -> dp1=wan1 dp2=wan2 dp5=lan1"
+	echo "ImmortalWRT: DTS port labels -> dp1=wan1 dp2=wan2 dp5=lan1"
 else
-	echo "RivWRT: ERROR - DTS label patch missed (dp1=$(dts_label dp1) dp2=$(dts_label dp2) dp5=$(dts_label dp5)，期望 wan1/wan2/lan1)" >&2
+	echo "ImmortalWRT: ERROR - DTS label patch missed (dp1=$(dts_label dp1) dp2=$(dts_label dp2) dp5=$(dts_label dp5)，期望 wan1/wan2/lan1)" >&2
 	exit 1
 fi
 
@@ -281,9 +281,9 @@ sed -i 's|ucidef_set_interfaces_lan_wan "lan1 lan2 lan3 lan4" "wan"|ucidef_set_i
 # wan1 —— 首次刷机后直接没网，且现象会被误判为"驱动问题"。
 if grep -q 'ucidef_set_interfaces_lan_wan "lan1 lan3 lan4" "wan1"' "$NW_BD" && \
    grep -q 'ucidef_set_interface "wan2" device "wan2"' "$NW_BD"; then
-	echo "RivWRT: 02_network -> lan(1,3,4) + wan1 + wan2"
+	echo "ImmortalWRT: 02_network -> lan(1,3,4) + wan1 + wan2"
 else
-	echo "RivWRT: ERROR - 02_network patch missed in $NW_BD（设备分支结构变了？）" >&2
+	echo "ImmortalWRT: ERROR - 02_network patch missed in $NW_BD（设备分支结构变了？）" >&2
 	exit 1
 fi
 
@@ -300,38 +300,38 @@ if [ -f "$FW_CFG" ]; then
 	# 断言：sed 未命中会静默不改，届时两条上行都进不了 wan zone（无 NAT、入站策略失效），
 	# 而这种错误在编译日志里看不出来，必须显式失败。
 	if grep -q "'wan1'" "$FW_CFG"; then
-		echo "RivWRT: firewall wan zone -> wan1 + wan2"
+		echo "ImmortalWRT: firewall wan zone -> wan1 + wan2"
 	else
-		echo "RivWRT: ERROR - firewall zone patch missed (pattern drift?)" >&2
+		echo "ImmortalWRT: ERROR - firewall zone patch missed (pattern drift?)" >&2
 		exit 1
 	fi
 else
-	echo "RivWRT: ERROR - $FW_CFG not found" >&2
+	echo "ImmortalWRT: ERROR - $FW_CFG not found" >&2
 	exit 1
 fi
-RIVWRT_DUAL_WAN_PORT_CONFIG_DISABLED
+ImmortalWRT_DUAL_WAN_PORT_CONFIG_DISABLED
 
 
 # -------------------------------------------------------
-# RivWRT：daede 暗色屏蔽
+# ImmortalWRT：daede 暗色屏蔽
 # -------------------------------------------------------
 
 CFG_JS=$(find ./package/luci-app-daede -name "config.js" 2>/dev/null | head -1)
-[ -n "$CFG_JS" ] && sed -i "s#document\.documentElement\.setAttribute('data-darkmode', 'true');#/* RivWRT: keep global dark-mode flag untouched */#" "$CFG_JS"
+[ -n "$CFG_JS" ] && sed -i "s#document\.documentElement\.setAttribute('data-darkmode', 'true');#/* ImmortalWRT: keep global dark-mode flag untouched */#" "$CFG_JS"
 
 # -------------------------------------------------------
-# RivWRT：mwan3 双 WAN 初始配置
+# ImmortalWRT：mwan3 双 WAN 初始配置
 #
 # 直接覆盖包自带的 files/etc/config/mwan3（Settings.sh 在 Packages.sh 之后执行，
 # 包已克隆到位）——配置随包走，首启即生效，无需再挂一条 uci-defaults。
 # -------------------------------------------------------
 
-# RivWRT 双 WAN 初始化配置已暂停；保留代码供后续恢复。
-: <<'RIVWRT_DUAL_WAN_MWAN3_CONFIG_DISABLED'
+# ImmortalWRT 双 WAN 初始化配置已暂停；保留代码供后续恢复。
+: <<'ImmortalWRT_DUAL_WAN_MWAN3_CONFIG_DISABLED'
 MWAN3_DIR="./package/mwan3"
 if [ -d "$MWAN3_DIR/files/etc/config" ]; then
-	cat > "$MWAN3_DIR/files/etc/config/mwan3" <<'RIVWRT_MWAN3'
-# RivWRT 多 WAN 配置（由 Scripts/Settings.sh 生成；上游默认值已被本文件取代）
+	cat > "$MWAN3_DIR/files/etc/config/mwan3" <<'ImmortalWRT_MWAN3'
+# ImmortalWRT 多 WAN 配置（由 Scripts/Settings.sh 生成；上游默认值已被本文件取代）
 #
 # 【默认不接管流量】下面所有 rule 的 enabled 都是 0。当前只有一条宽带时让
 # mwan3 接管默认路由没有收益，只会多出与 dae / NSS 的 fwmark 交互面。
@@ -397,23 +397,23 @@ config rule 'default_rule_v4'
 	option dest_ip '0.0.0.0/0'
 	option family 'ipv4'
 	option use_policy 'balanced'
-RIVWRT_MWAN3
-	echo "RivWRT: mwan3 dual-WAN config applied (rules disabled by default)"
+ImmortalWRT_MWAN3
+	echo "ImmortalWRT: mwan3 dual-WAN config applied (rules disabled by default)"
 else
-	echo "RivWRT: WARNING - ./package/mwan3 not found, mwan3 config skipped"
+	echo "ImmortalWRT: WARNING - ./package/mwan3 not found, mwan3 config skipped"
 fi
-RIVWRT_DUAL_WAN_MWAN3_CONFIG_DISABLED
+ImmortalWRT_DUAL_WAN_MWAN3_CONFIG_DISABLED
 
 
 # -------------------------------------------------------
-# RivWRT：uci-defaults 目标目录
+# ImmortalWRT：uci-defaults 目标目录
 # -------------------------------------------------------
 
 UDIR="./package/base-files/files/etc/uci-defaults"
 mkdir -p "$UDIR"
 
 # -------------------------------------------------------
-# RivWRT：修正第三方 LuCI 包的 luci.mk 引用路径
+# ImmortalWRT：修正第三方 LuCI 包的 luci.mk 引用路径
 #
 # 第三方 LuCI 包的 Makefile 常用 `include ../../luci.mk` —— 这是给
 # feeds/luci/applications/<pkg>/ 那种层级写的相对路径。本固件按惯例把这类包
@@ -429,18 +429,18 @@ for mk in $(grep -rl '\.\./\.\./luci\.mk' ./package/*/Makefile 2>/dev/null); do
 	LUCIMK_FIXED="$LUCIMK_FIXED $(basename "$(dirname "$mk")")"
 done
 if [ -n "$LUCIMK_FIXED" ]; then
-	echo "RivWRT: luci.mk path fixed for:$LUCIMK_FIXED"
+	echo "ImmortalWRT: luci.mk path fixed for:$LUCIMK_FIXED"
 fi
 # 断言：package/ 下不应再有指向 ../../luci.mk 的引用。
 # 漏改会导致该包构建直接失败（wrt/luci.mk 不存在），故此处显式拦下而不是留给 CI。
 if grep -rq '\.\./\.\./luci\.mk' ./package/*/Makefile 2>/dev/null; then
-	echo "RivWRT: ERROR - 仍有包以相对路径引用 luci.mk（会构建失败）:" >&2
+	echo "ImmortalWRT: ERROR - 仍有包以相对路径引用 luci.mk（会构建失败）:" >&2
 	grep -rl '\.\./\.\./luci\.mk' ./package/*/Makefile 2>/dev/null | sed 's/^/  /' >&2
 	exit 1
 fi
 
 # -------------------------------------------------------
-# RivWRT：让 LuCI 的资源版本号随构建变化（否则浏览器永久复用旧 JS）
+# ImmortalWRT：让 LuCI 的资源版本号随构建变化（否则浏览器永久复用旧 JS）
 #
 # 现象（实测两次被误导）：镜像里确认已包含新的页面代码，设备上打开的 LuCI 页面
 # 却仍是旧行为 —— 显示早已删除的控件、按钮点了没反应、图表不出数据。
@@ -486,18 +486,18 @@ if [ -n "$LUCI_RUNTIME" ]; then
 	BUILD_EPOCH=$(date +%s)
 	sed -i "s|^\([[:space:]]*\)self\.env\.pkgs_update_time = .*|\1self.env.pkgs_update_time = $BUILD_EPOCH;|" "$LUCI_RUNTIME"
 	if grep -q "pkgs_update_time = $BUILD_EPOCH;" "$LUCI_RUNTIME"; then
-		echo "RivWRT: LuCI 资源版本号已绑定构建时刻 ($BUILD_EPOCH)"
+		echo "ImmortalWRT: LuCI 资源版本号已绑定构建时刻 ($BUILD_EPOCH)"
 	else
-		echo "RivWRT: ERROR - 资源版本号改写未命中 $LUCI_RUNTIME（runtime.uc 结构变了？）" >&2
+		echo "ImmortalWRT: ERROR - 资源版本号改写未命中 $LUCI_RUNTIME（runtime.uc 结构变了？）" >&2
 		exit 1
 	fi
 else
-	echo "RivWRT: ERROR - 未在 ./feeds/luci 下找到 luci-base/ucode/runtime.uc（feeds 结构变了？）" >&2
+	echo "ImmortalWRT: ERROR - 未在 ./feeds/luci 下找到 luci-base/ucode/runtime.uc（feeds 结构变了？）" >&2
 	exit 1
 fi
 
 # -------------------------------------------------------
-# RivWRT：让首页「端口状态」卡片显示全部端口（含 wan2 这类额外上行）
+# ImmortalWRT：让首页「端口状态」卡片显示全部端口（含 wan2 这类额外上行）
 #
 # 现象：概览页端口卡片只出现 lan 与 wan，wan2 永远不显示 —— 即使 /etc/board.json
 # 里端口信息完全正确。
@@ -517,47 +517,47 @@ fi
 # 实测把 board.json 写成 lan / wan / wan2 三角色后，卡片会正确列出 5 个端口
 # （lan1 lan3 lan4 wan1 wan2）—— 与 `ls /sys/class/net` 一致。
 #
-# 配套：uci-defaults 的 98-rivwrt-net-fix 会把 board.json 归一化成同样的三角色
+# 配套：uci-defaults 的 98-ImmortalWRT-net-fix 会把 board.json 归一化成同样的三角色
 # 形态（lan 用 ports 数组、wan/wan2 各用 device），避免同一端口既出现在某角色的
 # ports 里、又作为独立角色出现而重复显示。
 # -------------------------------------------------------
 # 双 WAN 专属端口角色补丁已暂停；保留代码供后续恢复。
-: <<'RIVWRT_DUAL_WAN_LUCI_PORTS_DISABLED'
+: <<'ImmortalWRT_DUAL_WAN_LUCI_PORTS_DISABLED'
 LUCI_RPCD_PLUGIN=$(find_in_feed 'luci-base[/\\]root[/\\]usr[/\\]share[/\\]rpcd[/\\]ucode[/\\]' 'luci')
 if [ -n "$LUCI_RPCD_PLUGIN" ]; then
 	sed -i "s|for (let k in \[ 'lan', 'wan' \])|for (let k in keys(board?.network ?? {}))|" "$LUCI_RPCD_PLUGIN"
 	if grep -qF 'for (let k in keys(board?.network ?? {}))' "$LUCI_RPCD_PLUGIN"; then
-		echo "RivWRT: 端口卡片角色限制已解除（遍历 board.network 全部角色）"
+		echo "ImmortalWRT: 端口卡片角色限制已解除（遍历 board.network 全部角色）"
 	else
-		echo "RivWRT: ERROR - 端口卡片补丁未命中 $LUCI_RPCD_PLUGIN（插件结构变了？）" >&2
+		echo "ImmortalWRT: ERROR - 端口卡片补丁未命中 $LUCI_RPCD_PLUGIN（插件结构变了？）" >&2
 		exit 1
 	fi
 else
-	echo "RivWRT: ERROR - 未在 ./feeds/luci 下找到 luci-base 的 rpcd ucode 插件（feeds 结构变了？）" >&2
+	echo "ImmortalWRT: ERROR - 未在 ./feeds/luci 下找到 luci-base 的 rpcd ucode 插件（feeds 结构变了？）" >&2
 	exit 1
 fi
-RIVWRT_DUAL_WAN_LUCI_PORTS_DISABLED
+ImmortalWRT_DUAL_WAN_LUCI_PORTS_DISABLED
 
 # -------------------------------------------------------
 # uci-defaults：FullCone NAT（IPv4）
 # -------------------------------------------------------
 
-cat > "$UDIR/96-rivwrt-fullcone" <<'RIVWRT_FC'
+cat > "$UDIR/96-ImmortalWRT-fullcone" <<'ImmortalWRT_FC'
 #!/bin/sh
 uci -q set firewall.@defaults[0].fullcone='1'
 uci commit firewall
-RIVWRT_FC
-chmod +x "$UDIR/96-rivwrt-fullcone"
+ImmortalWRT_FC
+chmod +x "$UDIR/96-ImmortalWRT-fullcone"
 
 # -------------------------------------------------------
 # uci-defaults：网络配置对新端口命名的纠正
 # -------------------------------------------------------
 
 # 双 WAN 接口迁移与 board.json 归一化已暂停；保留代码供后续恢复。
-: <<'RIVWRT_DUAL_WAN_NETFIX_DISABLED'
-cat > "$UDIR/98-rivwrt-net-fix" <<'RIVWRT_NETFIX'
+: <<'ImmortalWRT_DUAL_WAN_NETFIX_DISABLED'
+cat > "$UDIR/98-ImmortalWRT-net-fix" <<'ImmortalWRT_NETFIX'
 #!/bin/sh
-# RivWRT 网口规范化（幂等；由 uci-defaults 在每次首启/升级后执行一次）
+# ImmortalWRT 网口规范化（幂等；由 uci-defaults 在每次首启/升级后执行一次）
 #
 # 目标形态（物理丝印 → 系统接口名）：
 #   丝印 WAN (2.5G)  → lan1
@@ -580,7 +580,7 @@ done
 # --- 2) 旧接口名迁移 wan → wan1（仅当 wan1 尚不存在时执行）---
 if uci -q get network.wan >/dev/null 2>&1 && ! uci -q get network.wan1 >/dev/null 2>&1; then
 	uci -q rename network.wan=wan1
-	echo "RivWRT: migrated network.wan -> network.wan1"
+	echo "ImmortalWRT: migrated network.wan -> network.wan1"
 fi
 
 # --- 3) 确保两条上行齐备，且 device 指向正确的物理口 ---
@@ -676,25 +676,25 @@ if [ -f "$BOARD_JSON" ] && command -v ucode >/dev/null 2>&1; then
 			      && w == "wan1" && w2 == "wan2") ? 0 : 1);
 		' 2>/dev/null; then
 			mv -f "$_bj_tmp" "$BOARD_JSON"
-			echo "RivWRT: board.json 端口信息已更新（lan=lan1,lan3,lan4 / wan=wan1 / wan2=wan2）"
+			echo "ImmortalWRT: board.json 端口信息已更新（lan=lan1,lan3,lan4 / wan=wan1 / wan2=wan2）"
 		else
 			rm -f "$_bj_tmp"
-			echo "RivWRT: WARNING - board.json 校验未通过，保持原样" >&2
+			echo "ImmortalWRT: WARNING - board.json 校验未通过，保持原样" >&2
 		fi
 	else
 		rm -f "$_bj_tmp"
-		echo "RivWRT: WARNING - board.json 重写失败，保持原样" >&2
+		echo "ImmortalWRT: WARNING - board.json 重写失败，保持原样" >&2
 	fi
 fi
-RIVWRT_NETFIX
-chmod +x "$UDIR/98-rivwrt-net-fix"
-RIVWRT_DUAL_WAN_NETFIX_DISABLED
+ImmortalWRT_NETFIX
+chmod +x "$UDIR/98-ImmortalWRT-net-fix"
+ImmortalWRT_DUAL_WAN_NETFIX_DISABLED
 
 # -------------------------------------------------------
 # uci-defaults：修正 qualcommax 首启时生成的不完整 wan6
 # -------------------------------------------------------
 
-cat > "$UDIR/98-rivwrt-wan6-fix" <<'RIVWRT_WAN6'
+cat > "$UDIR/98-ImmortalWRT-wan6-fix" <<'ImmortalWRT_WAN6'
 #!/bin/sh
 # qualcommax 的 991_set-network.sh 会创建 wan6 并补 reqaddress/reqprefix，
 # 但可能没有 device/proto。先在 98 阶段补齐，避免留下不可用的空接口。
@@ -713,25 +713,25 @@ else
 	fi
 fi
 uci commit network
-RIVWRT_WAN6
-chmod +x "$UDIR/98-rivwrt-wan6-fix"
+ImmortalWRT_WAN6
+chmod +x "$UDIR/98-ImmortalWRT-wan6-fix"
 
 # -------------------------------------------------------
 # uci-defaults：podman API 服务默认关闭
 # -------------------------------------------------------
 
-cat > "$UDIR/99-rivwrt-podman" <<'RIVWRT_PODMAN'
+cat > "$UDIR/99-ImmortalWRT-podman" <<'ImmortalWRT_PODMAN'
 #!/bin/sh
 /etc/init.d/podman stop 2>/dev/null
 /etc/init.d/podman disable 2>/dev/null
-RIVWRT_PODMAN
-chmod +x "$UDIR/99-rivwrt-podman"
+ImmortalWRT_PODMAN
+chmod +x "$UDIR/99-ImmortalWRT-podman"
 
 # -------------------------------------------------------
 # uci-defaults：菜单归拢
 # -------------------------------------------------------
 
-cat > "$UDIR/99-rivwrt-menus" <<'RIVWRT_MENUS'
+cat > "$UDIR/99-ImmortalWRT-menus" <<'ImmortalWRT_MENUS'
 #!/bin/sh
 [ -f /usr/share/luci/menu.d/luci-app-wolultra.json ] && \
 	sed -i "s#\"admin/control/wolultra\"#\"admin/services/wolultra\"#" /usr/share/luci/menu.d/luci-app-wolultra.json
@@ -739,12 +739,12 @@ cat > "$UDIR/99-rivwrt-menus" <<'RIVWRT_MENUS'
 	sed -i "s#\"admin/nas/samba4\"#\"admin/services/samba4\"#" /usr/share/luci/menu.d/luci-app-samba4.json
 [ -f /usr/share/luci/menu.d/luci-app-bandix-plus.json ] && \
 	sed -i "s#admin/network/bandix_plus#admin/services/bandix_plus#g" /usr/share/luci/menu.d/luci-app-bandix-plus.json
-RIVWRT_MENUS
-chmod +x "$UDIR/99-rivwrt-menus"
+ImmortalWRT_MENUS
+chmod +x "$UDIR/99-ImmortalWRT-menus"
 
 
 # =========================================================
-# RivWRT：podman-compose 包（上游 feeds 无此包，自建）
+# ImmortalWRT：podman-compose 包（上游 feeds 无此包，自建）
 # PyPI sdist 打包，依赖 python3 + python3-yaml + python3-dotenv
 # 版本与哈希已钉死，纯 Python 无需编译
 # =========================================================
@@ -763,7 +763,7 @@ PKG_HASH:=c83fd9bcbaa635100d581ce52a7a4b712ee0d457481232aff392efe3ebc5a217
 PKG_BUILD_DIR:=$(BUILD_DIR)/podman_compose-$(PKG_VERSION)
 
 PKG_LICENSE:=GPL-2.0-only
-PKG_MAINTAINER:=RivWRT
+PKG_MAINTAINER:=ImmortalWRT
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -791,22 +791,22 @@ $(eval $(call BuildPackage,podman-compose))
 EOF
 
 # =========================================================
-# RivWRT：luci-app-rivwrt-nss —— NSS 开关与状态页（独立包）
+# ImmortalWRT：luci-app-ImmortalWRT-nss —— NSS 开关与状态页（独立包）
 # =========================================================
-PKGDIR=./package/luci-app-rivwrt-nss
+PKGDIR=./package/luci-app-ImmortalWRT-nss
 mkdir -p $PKGDIR/root/usr/share/luci/menu.d \
 	$PKGDIR/root/usr/share/rpcd/acl.d \
-	$PKGDIR/root/www/luci-static/resources/view/rivwrt \
-	$PKGDIR/root/usr/libexec/rivwrt
+	$PKGDIR/root/www/luci-static/resources/view/ImmortalWRT \
+	$PKGDIR/root/usr/libexec/ImmortalWRT
 
 cat > $PKGDIR/Makefile <<'EOF'
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=luci-app-rivwrt-nss
+PKG_NAME:=luci-app-ImmortalWRT-nss
 PKG_VERSION:=1.0.0
 PKG_RELEASE:=1
 
-LUCI_TITLE:=RivWRT NSS acceleration toggle and live status
+LUCI_TITLE:=ImmortalWRT NSS acceleration toggle and live status
 # rrdtool1 提供 /usr/bin/rrdtool —— nss-status 用它读 RRD 历史。
 # 此前仅靠 luci-app-statistics 间接带入（它依赖 +rrdtool1），属隐式依赖；
 # 若该 app 被移除，历史图会静默失效。此处显式声明 +collectd-mod-exec
@@ -821,43 +821,43 @@ LUCI_PKGARCH:=all
 include $(TOPDIR)/feeds/luci/luci.mk
 
 define Package/$(PKG_NAME)/description
-  RivWRT 定制：NSS 硬件加速开关与实时状态（引擎负载/时钟/加速连接数）
+  ImmortalWRT 定制：NSS 硬件加速开关与实时状态（引擎负载/时钟/加速连接数）
 endef
 
 # call BuildPackage - OpenWrt buildroot signature
 EOF
 
-cat > $PKGDIR/root/usr/share/luci/menu.d/luci-app-rivwrt-nss.json <<'EOF'
+cat > $PKGDIR/root/usr/share/luci/menu.d/luci-app-ImmortalWRT-nss.json <<'EOF'
 {
-	"admin/services/rivwrt_nss": {
+	"admin/services/ImmortalWRT_nss": {
 		"title": "NSS 加速",
 		"order": 30,
 		"action": { "type": "firstchild" },
-		"depends": { "acl": [ "luci-app-rivwrt-nss" ], "fs": { "/etc/init.d/qca-nss-ecm": "file" } }
+		"depends": { "acl": [ "luci-app-ImmortalWRT-nss" ], "fs": { "/etc/init.d/qca-nss-ecm": "file" } }
 	},
-	"admin/services/rivwrt_nss/status": {
+	"admin/services/ImmortalWRT_nss/status": {
 		"title": "状态与开关",
 		"order": 10,
-		"action": { "type": "view", "path": "rivwrt/nss" },
-		"depends": { "acl": [ "luci-app-rivwrt-nss" ] }
+		"action": { "type": "view", "path": "ImmortalWRT/nss" },
+		"depends": { "acl": [ "luci-app-ImmortalWRT-nss" ] }
 	}
 }
 EOF
 
-cat > $PKGDIR/root/usr/share/rpcd/acl.d/luci-app-rivwrt-nss.json <<'EOF'
+cat > $PKGDIR/root/usr/share/rpcd/acl.d/luci-app-ImmortalWRT-nss.json <<'EOF'
 {
-	"luci-app-rivwrt-nss": {
-		"description": "Grant access to RivWRT NSS control and status",
+	"luci-app-ImmortalWRT-nss": {
+		"description": "Grant access to ImmortalWRT NSS control and status",
 		"read": {
 			"ubus": {
 				"file": [ "exec" ]
 			},
 			"file": {
-				"/usr/libexec/rivwrt/nss-status": [ "exec" ],
-				"/usr/libexec/rivwrt/nss-status 2h": [ "exec" ],
-				"/usr/libexec/rivwrt/nss-status 12h": [ "exec" ],
-				"/usr/libexec/rivwrt/nss-status 1d": [ "exec" ],
-				"/usr/libexec/rivwrt/nss-status 1w": [ "exec" ]
+				"/usr/libexec/ImmortalWRT/nss-status": [ "exec" ],
+				"/usr/libexec/ImmortalWRT/nss-status 2h": [ "exec" ],
+				"/usr/libexec/ImmortalWRT/nss-status 12h": [ "exec" ],
+				"/usr/libexec/ImmortalWRT/nss-status 1d": [ "exec" ],
+				"/usr/libexec/ImmortalWRT/nss-status 1w": [ "exec" ]
 			}
 		},
 		"write": {
@@ -866,11 +866,11 @@ cat > $PKGDIR/root/usr/share/rpcd/acl.d/luci-app-rivwrt-nss.json <<'EOF'
 				"rc": [ "init" ]
 			},
 			"file": {
-				"/usr/libexec/rivwrt/nss-status": [ "exec" ],
-				"/usr/libexec/rivwrt/nss-status 2h": [ "exec" ],
-				"/usr/libexec/rivwrt/nss-status 12h": [ "exec" ],
-				"/usr/libexec/rivwrt/nss-status 1d": [ "exec" ],
-				"/usr/libexec/rivwrt/nss-status 1w": [ "exec" ],
+				"/usr/libexec/ImmortalWRT/nss-status": [ "exec" ],
+				"/usr/libexec/ImmortalWRT/nss-status 2h": [ "exec" ],
+				"/usr/libexec/ImmortalWRT/nss-status 12h": [ "exec" ],
+				"/usr/libexec/ImmortalWRT/nss-status 1d": [ "exec" ],
+				"/usr/libexec/ImmortalWRT/nss-status 1w": [ "exec" ],
 				"/usr/bin/nss_freq mid": [ "exec" ],
 				"/usr/bin/nss_freq high": [ "exec" ]
 			}
@@ -879,7 +879,7 @@ cat > $PKGDIR/root/usr/share/rpcd/acl.d/luci-app-rivwrt-nss.json <<'EOF'
 }
 EOF
 
-cat > $PKGDIR/root/www/luci-static/resources/view/rivwrt/nss.js <<'EOF'
+cat > $PKGDIR/root/www/luci-static/resources/view/ImmortalWRT/nss.js <<'EOF'
 'use strict';
 'require view';
 'require poll';
@@ -887,8 +887,8 @@ cat > $PKGDIR/root/www/luci-static/resources/view/rivwrt/nss.js <<'EOF'
 'require dom';
 'require ui';
 
-/* RivWRT NSS 加速：开关 + 负载历史图
-   数据源：/usr/libexec/rivwrt/nss-status（debugfs 实时 + RRD 历史）
+/* ImmortalWRT NSS 加速：开关 + 负载历史图
+   数据源：/usr/libexec/ImmortalWRT/nss-status（debugfs 实时 + RRD 历史）
    控制：/etc/init.d/qca-nss-ecm start|stop|enable|disable
    样式沿用 aurora 主题 token（var(--brand) 等，附 sRGB 回退值） */
 
@@ -938,7 +938,7 @@ function readStatus(range) {
 		return { load: {}, stats: 'error' };
 	}
 
-	return callExec('/usr/libexec/rivwrt/nss-status', [ range || '2h' ]).then(function (res) {
+	return callExec('/usr/libexec/ImmortalWRT/nss-status', [ range || '2h' ]).then(function (res) {
 		/* 原实现在此无条件吞掉失败并返回空对象，于是 ACL 未生效、
 		   nss-status 缺失等情况只会表现为"图表一直空着"，且提示语是
 		   "首次采集需等待约 30 秒" —— 把故障说成正常等待。 */
@@ -1519,9 +1519,9 @@ return view.extend({
 });
 EOF
 
-cat > $PKGDIR/root/usr/libexec/rivwrt/nss-status <<'EOF'
+cat > $PKGDIR/root/usr/libexec/ImmortalWRT/nss-status <<'EOF'
 #!/bin/sh
-# RivWRT NSS 状态采集：输出 key=value 供 LuCI 页面解析
+# ImmortalWRT NSS 状态采集：输出 key=value 供 LuCI 页面解析
 # 用法：nss-status [range]   range ∈ 2h|12h|1d|1w（默认 2h，仅影响 history 段）
 # 输出字段与页面消费点一一对应：ecm / autostart / freq / freqlevel / stats /
 # load_<n> / hist。不输出页面不读的字段（此前多输出 ts、freqmode、histrange，
@@ -1637,10 +1637,10 @@ if [ -n "$RRD" ] && [ -x /usr/bin/rrdtool ]; then
 fi
 exit 0
 EOF
-chmod +x $PKGDIR/root/usr/libexec/rivwrt/nss-status
+chmod +x $PKGDIR/root/usr/libexec/ImmortalWRT/nss-status
 
 # -------------------------------------------------------
-# RivWRT：无线三频固化 init.d 脚本
+# ImmortalWRT：无线三频固化 init.d 脚本
 # 生成到 base-files 的 init.d + rc.d 链接（固件层启用，首启自动执行一次）
 # 硬件拓扑：radio0(5G ahb) / radio1(2.4G ahb) / radio2(QCN9074 PCIe 5G)
 # 频段分配：radio0=5G-1 游戏(44/HE160)、radio1=2.4G(11/HT20)、radio2=5G-2 影音(149/HE80)
@@ -1648,10 +1648,10 @@ chmod +x $PKGDIR/root/usr/libexec/rivwrt/nss-status
 # -------------------------------------------------------
 
 mkdir -p "./package/base-files/files/etc/init.d" "./package/base-files/files/etc/rc.d"
-WIFI_INIT="./package/base-files/files/etc/init.d/rivwrt-wifi"
-cat > "$WIFI_INIT" <<'RIVWRT_WIFI'
+WIFI_INIT="./package/base-files/files/etc/init.d/ImmortalWRT-wifi"
+cat > "$WIFI_INIT" <<'ImmortalWRT_WIFI'
 #!/bin/sh /etc/rc.common
-# RivWRT 无线兜底：参数比对 + 失效 radio 的【串行】重启 + 兜底重启一次
+# ImmortalWRT 无线兜底：参数比对 + 失效 radio 的【串行】重启 + 兜底重启一次
 #
 # ── 参数比对 ──
 # 编译期已在 mac80211.uc 注入 ssid/channel/htmode/country/txpower/encryption，
@@ -1679,8 +1679,8 @@ START=99
 #   v1 → v2：补上 disabled 清理（见 start() 第 0 步）。
 #   v2 → v3：就绪判定从 radio 状态改为 AP 接口实际状态（wifi isup 会误判成功，
 #            导致 5G 起不来时脚本毫无动作 —— 真机实测确认）。
-MARKER=/etc/.rivwrt-wifi-v3
-REBOOT_GUARD=/etc/.rivwrt-wifi-rebooted
+MARKER=/etc/.ImmortalWRT-wifi-v3
+REBOOT_GUARD=/etc/.ImmortalWRT-wifi-rebooted
 
 # 逐 radio 的 upsert（不触发 netifd 全量 reload）
 rw_updown() {
@@ -1725,8 +1725,8 @@ radio_iface_section() {
 ssid_on_air() {
 	[ -n "$1" ] || return 1
 	for _ifn in $(ls /sys/class/net 2>/dev/null | grep -E '^phy[0-9]+-ap[0-9]+$'); do
-		# 用 awk 精确比较而非 grep 正则：SSID 里含 "."（如 RivWRT-5.2G），
-		# 在正则中 "." 匹配任意字符，会把 RivWRT-512G 之类误判为同一个。
+		# 用 awk 精确比较而非 grep 正则：SSID 里含 "."（如 ImmortalWRT-5.2G），
+		# 在正则中 "." 匹配任意字符，会把 ImmortalWRT-512G 之类误判为同一个。
 		# awk 里把 "ssid " 前缀剥掉后整行比较，SSID 含空格也能正确比对。
 		iw dev "$_ifn" info 2>/dev/null | awk -v s="$1" '
 			$1 == "ssid" {
@@ -1783,7 +1783,7 @@ start() {
 		DISABLED_FIXED="$DISABLED_FIXED $SEC"
 		CHANGED=1
 	done
-	[ -n "$DISABLED_FIXED" ] && logger -t rivwrt-wifi "已重新启用被禁用的无线段:$DISABLED_FIXED"
+	[ -n "$DISABLED_FIXED" ] && logger -t ImmortalWRT-wifi "已重新启用被禁用的无线段:$DISABLED_FIXED"
 
 	# ── 参数比对（仅不符才改）──
 	for RADIO in $(list_radios); do
@@ -1829,7 +1829,7 @@ start() {
 
 	# ── 串行重启（一次一个），避免并发 regd 更新竞争 ──
 	if [ -n "$NEED" ]; then
-		logger -t rivwrt-wifi "以下 radio 未就绪，开始串行重启:$NEED"
+		logger -t ImmortalWRT-wifi "以下 radio 未就绪，开始串行重启:$NEED"
 		for RADIO in $NEED; do
 			rw_updown down "$RADIO"
 			sleep 3
@@ -1839,7 +1839,7 @@ start() {
 				radio_ready "$RADIO" && break
 				i=$((i+1)); sleep 2
 			done
-			radio_ready "$RADIO" || logger -t rivwrt-wifi "重启后 $RADIO 仍未就绪" 
+			radio_ready "$RADIO" || logger -t ImmortalWRT-wifi "重启后 $RADIO 仍未就绪"
 		done
 	fi
 
@@ -1848,7 +1848,7 @@ start() {
 	for RADIO in $(list_radios); do
 		radio_ready "$RADIO" || STILL="$STILL $RADIO"
 	done
-	[ -n "$NEED" ] && logger -t rivwrt-wifi "无线就绪复核：未就绪=[${STILL# }]" 
+	[ -n "$NEED" ] && logger -t ImmortalWRT-wifi "无线就绪复核：未就绪=[${STILL# }]"
 
 	if [ -z "$STILL" ]; then
 		rm -f "$REBOOT_GUARD"
@@ -1857,31 +1857,31 @@ start() {
 		if [ ! -f "$REBOOT_GUARD" ]; then
 			# 兜底：实测重启一次即可恢复。guard 文件防止无限重启循环。
 			touch "$REBOOT_GUARD"
-			logger -t rivwrt-wifi "串行重启后仍未就绪:$STILL，按兜底策略重启一次"
+			logger -t ImmortalWRT-wifi "串行重启后仍未就绪:$STILL，按兜底策略重启一次"
 			sleep 5
 			sync
 			reboot
 		else
-			logger -t rivwrt-wifi "仍未就绪:$STILL（兜底重启已用过，不再重启以免循环）"
+			logger -t ImmortalWRT-wifi "仍未就绪:$STILL（兜底重启已用过，不再重启以免循环）"
 		fi
 	fi
 }
-RIVWRT_WIFI
+ImmortalWRT_WIFI
 sed -i "s/__SSID__/$WRT_SSID/g" "$WIFI_INIT"   # heredoc 引号形式，此处展开 SSID
 chmod +x "$WIFI_INIT"
 
 # rc.d 启动链接（固件层启用，否则首启不会执行）
 mkdir -p "./package/base-files/files/etc/rc.d"
-ln -sf ../init.d/rivwrt-wifi "./package/base-files/files/etc/rc.d/S99rivwrt-wifi"
+ln -sf ../init.d/ImmortalWRT-wifi "./package/base-files/files/etc/rc.d/S99ImmortalWRT-wifi"
 
 # -------------------------------------------------------
-# RivWRT：swap 分区默认启用（eMMC mmcblk0p26）
+# ImmortalWRT：swap 分区默认启用（eMMC mmcblk0p26）
 # 上游树对 jdcloud_re-cs-02 未做 swap 自动挂载；1G RAM 设备启用 swap
 # 承载跑分/插件缓存。传统 rc.common start() 风格（非 procd），
 # 避免 USE_PROCD 差异带来的 start_service 不调用问题。
 # -------------------------------------------------------
-SWAP_INIT="./package/base-files/files/etc/init.d/rivwrt-swap"
-cat > "$SWAP_INIT" <<'RIVWRT_SWAP'
+SWAP_INIT="./package/base-files/files/etc/init.d/ImmortalWRT-swap"
+cat > "$SWAP_INIT" <<'ImmortalWRT_SWAP'
 #!/bin/sh /etc/rc.common
 START=20
 start() {
@@ -1890,18 +1890,18 @@ start() {
 	blkid -t TYPE=swap /dev/mmcblk0p26 >/dev/null 2>&1 || mkswap /dev/mmcblk0p26 >/dev/null 2>&1
 	swapon /dev/mmcblk0p26 2>/dev/null
 }
-RIVWRT_SWAP
+ImmortalWRT_SWAP
 chmod +x "$SWAP_INIT"
-ln -sf ../init.d/rivwrt-swap "./package/base-files/files/etc/rc.d/S20rivwrt-swap"
+ln -sf ../init.d/ImmortalWRT-swap "./package/base-files/files/etc/rc.d/S20ImmortalWRT-swap"
 
 # -------------------------------------------------------
-# RivWRT：NSS 负载历史采集（collectd exec → RRD）
+# ImmortalWRT：NSS 负载历史采集（collectd exec → RRD）
 #
 # 接线链（每环独立验证过）：
-#   ① init.d rivwrt-nss-stat (root, START=25)
+#   ① init.d ImmortalWRT-nss-stat (root, START=25)
 #        等 debugfs 就绪 → chmod 644 cpu_load_ubi
 #        （collectd 硬性拒绝以 root 跑 exec，见 collectd-exec.pod CAVEATS）
-#   ② uci-defaults 99-rivwrt-nss-stat
+#   ② uci-defaults 99-ImmortalWRT-nss-stat
 #        开 collectd_exec 插件 + 注册采集脚本（cmduser=nobody，见下）
 #        rrdtool.backup=1 → 关机时打包，重启恢复（平时 RRD 在 /tmp 不写 eMMC）
 #   ③ collectd exec 插件每 30s fork nss-collectd.sh（以 nobody 身份）
@@ -1911,8 +1911,8 @@ ln -sf ../init.d/rivwrt-swap "./package/base-files/files/etc/rc.d/S20rivwrt-swap
 # -------------------------------------------------------
 
 # ① 放开 debugfs 统计文件读权限（collectd 以非 root 身份运行）
-NSSSTAT_INIT="./package/base-files/files/etc/init.d/rivwrt-nss-stat"
-cat > "$NSSSTAT_INIT" <<'RIVWRT_NSSSTAT'
+NSSSTAT_INIT="./package/base-files/files/etc/init.d/ImmortalWRT-nss-stat"
+cat > "$NSSSTAT_INIT" <<'ImmortalWRT_NSSSTAT'
 #!/bin/sh /etc/rc.common
 START=25
 start() {
@@ -1930,14 +1930,14 @@ start() {
 	# 只放开这一个只读统计文件；debugfs 其余保持原权限
 	chmod 644 "$F" 2>/dev/null
 }
-RIVWRT_NSSSTAT
+ImmortalWRT_NSSSTAT
 chmod +x "$NSSSTAT_INIT"
-ln -sf ../init.d/rivwrt-nss-stat "./package/base-files/files/etc/rc.d/S25rivwrt-nss-stat"
+ln -sf ../init.d/ImmortalWRT-nss-stat "./package/base-files/files/etc/rc.d/S25ImmortalWRT-nss-stat"
 
 # ③ 采集脚本：debugfs → collectd PUTVAL
-NSSCOLLECT="./package/base-files/files/usr/libexec/rivwrt/nss-collectd.sh"
+NSSCOLLECT="./package/base-files/files/usr/libexec/ImmortalWRT/nss-collectd.sh"
 mkdir -p "$(dirname "$NSSCOLLECT")"
-cat > "$NSSCOLLECT" <<'RIVWRT_NSSCOLLECT'
+cat > "$NSSCOLLECT" <<'ImmortalWRT_NSSCOLLECT'
 #!/bin/sh
 # 采集 NSS 核心负载，输出 collectd exec 协议（PUTVAL）。
 #
@@ -1969,12 +1969,12 @@ while :; do
 	if [ -r "$F" ]; then
 		awk '
 			/^Core [0-9]+:/ { core = $2; sub(":", "", core); has_core = 1; next }
-			has_core && /%/ { gsub("%", "", $2); print "RivWRT/nss-load/gauge-core" core " N:" $2; has_core = 0 }
+			has_core && /%/ { gsub("%", "", $2); print "ImmortalWRT/nss-load/gauge-core" core " N:" $2; has_core = 0 }
 		' "$F"
 	fi
 	sleep "$INTERVAL"
 done
-RIVWRT_NSSCOLLECT
+ImmortalWRT_NSSCOLLECT
 chmod +x "$NSSCOLLECT"
 
 
@@ -1982,18 +1982,18 @@ chmod +x "$NSSCOLLECT"
 #    注：collectd 硬性拒绝以 root 运行 exec（collectd-exec.pod CAVEATS：
 #    "The user ... may not have root privileges"），故 cmduser 必须非 root。
 #    debugfs 默认仅 root 可读，由 ① 的 init.d 预先 chmod 644，nobody 即可读取。
-NSSSTAT_UDIR="./package/base-files/files/etc/uci-defaults/99-rivwrt-nss-stat"
+NSSSTAT_UDIR="./package/base-files/files/etc/uci-defaults/99-ImmortalWRT-nss-stat"
 mkdir -p "$(dirname "$NSSSTAT_UDIR")"
-cat > "$NSSSTAT_UDIR" <<'RIVWRT_NSSUDIR'
+cat > "$NSSSTAT_UDIR" <<'ImmortalWRT_NSSUDIR'
 #!/bin/sh
 # 开启 collectd exec 插件
 uci -q set luci_statistics.collectd_exec=statistics
 uci -q set luci_statistics.collectd_exec.enable='1'
 # 注册 NSS 负载采集（每 30s 一次，跟随全局 Interval）
-uci -q delete luci_statistics.rivwrt_nss
-uci -q set luci_statistics.rivwrt_nss=collectd_exec_input
-uci -q set luci_statistics.rivwrt_nss.cmdline='/usr/libexec/rivwrt/nss-collectd.sh'
-uci -q set luci_statistics.rivwrt_nss.cmduser='nobody'
+uci -q delete luci_statistics.ImmortalWRT_nss
+uci -q set luci_statistics.ImmortalWRT_nss=collectd_exec_input
+uci -q set luci_statistics.ImmortalWRT_nss.cmdline='/usr/libexec/ImmortalWRT/nss-collectd.sh'
+uci -q set luci_statistics.ImmortalWRT_nss.cmduser='nobody'
 # 注：不修改 collectd_rrdtool 的 backup / RRATimespans ——
 #   两者是【全局】设置，会影响统计页的 cpu/memory 等所有图。用户要求
 #   "统计恢复原样"，故保持上游默认（backup=0、RRATimespans 五档含 1year）。
@@ -2003,5 +2003,5 @@ uci -q commit luci_statistics
 [ -x /etc/init.d/luci_statistics ] && /etc/init.d/luci_statistics restart >/dev/null 2>&1
 [ -x /etc/init.d/collectd ] && /etc/init.d/collectd restart >/dev/null 2>&1
 exit 0
-RIVWRT_NSSUDIR
+ImmortalWRT_NSSUDIR
 chmod +x "$NSSSTAT_UDIR"

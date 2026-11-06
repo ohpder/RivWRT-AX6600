@@ -1,8 +1,8 @@
 # =========================================================
-# RivWRT 外部组件注入清单
+# ImmortalWRT 外部组件注入清单
 # 由 WRT-CORE.yml 在 Custom Packages 阶段调用（cwd = wrt/package/）
 #
-# 组件（无条件注入，RIVWRT profile）：
+# 组件（无条件注入，ImmortalWRT profile）：
 #   aurora        eamonxg/luci-theme-aurora        主题
 #   athena-led    unraveloop/JDC-AX6600-...        LED 点阵屏（pkg 提取两子包）
 #   bandix-plus   timsaya/openwrt-bandix-plus      流量统计后端（pkg）
@@ -102,40 +102,40 @@ UPDATE_PACKAGE() {
 #UPDATE_PACKAGE "momo" "nikkinikki-org/OpenWrt-momo" "main"
 #UPDATE_PACKAGE "nikki" "nikkinikki-org/OpenWrt-nikki" "main"
 # =========================================================
-# RivWRT 组件注入（基于上游纯净版基座的定制组件，无条件拉取）
+# ImmortalWRT 组件注入（基于上游纯净版基座的定制组件，无条件拉取）
 # 顺序：主题 → LED → bandix → daede
 # =========================================================
 
-# RivWRT：LuCI 主题（eamonxg 版 aurora，自带 uci-defaults 首次启动自动激活）
+# ImmortalWRT：LuCI 主题（eamonxg 版 aurora，自带 uci-defaults 首次启动自动激活）
 UPDATE_PACKAGE "aurora" "eamonxg/luci-theme-aurora" "master"
-# RivWRT：aurora 主题设置界面（5 套预设/自定义色彩/导航布局/主题商店）
+# ImmortalWRT：aurora 主题设置界面（5 套预设/自定义色彩/导航布局/主题商店）
 UPDATE_PACKAGE "aurora-config" "eamonxg/luci-app-aurora-config" "master"
 
-# RivWRT：LED 点阵屏控制器 —— 使用上游树内官方版
+# ImmortalWRT：LED 点阵屏控制器 —— 使用上游树内官方版
 # （package/emortal/luci-app-athena-led，ones20250 官方固件同款，自带预编译二进制零下载）。
 # 注：unraveloop 增强版 release 资产（athena-led-*-v2.5.0.tar.gz）已被上游删除，
 # 下载 404 无法构建，故回退树内版；其核心同为 haipengno1/athena-led 集成。
 # 恢复资产后可换回：UPDATE_PACKAGE "athena-led" "unraveloop/JDC-AX6600-Athena-LED-Controller" "main" "pkg"
 
-# RivWRT：bandix-plus 流量统计（后端 + LuCI 前端；eBPF 旁路观察，不碰转发路径）
+# ImmortalWRT：bandix-plus 流量统计（后端 + LuCI 前端；eBPF 旁路观察，不碰转发路径）
 UPDATE_PACKAGE "bandix-plus" "timsaya/openwrt-bandix-plus" "main" "pkg"
 UPDATE_PACKAGE "luci-app-bandix-plus" "timsaya/luci-app-bandix-plus" "main" "pkg"
 
-# RivWRT：daede 透明代理一体包。pkg-exact 按精确名提取 4 个子目录包：
+# ImmortalWRT：daede 透明代理一体包。pkg-exact 按精确名提取 4 个子目录包：
 # dae（eBPF 内核）/ daed / luci-app-daede / vmlinux-btf（dae/daed 的 BTF 依赖包）；
 # 删除 feeds 同名旧包（dae/daed）同样走精确匹配，luci-app-dae/daed 不同名保留无碍。
 UPDATE_PACKAGE "dae" "kenzok8/openwrt-daede" "main" "pkg-exact" "dae daed luci-app-daede vmlinux-btf"
 
-# RivWRT：网络唤醒。上游 wolplus 已换代为 wolultra（ones20250/packages 内，依赖 etherwake），
+# ImmortalWRT：网络唤醒。上游 wolplus 已换代为 wolultra（ones20250/packages 内，依赖 etherwake），
 # 从大杂烩仓库精确提取该包
 UPDATE_PACKAGE "wolultra" "ones20250/packages" "main" "pkg-exact" "luci-app-wolultra"
 
 #UPDATE_PACKAGE "mosdns" "sbwml/luci-app-mosdns" "v5" "" "v2dat"
 
-# RivWRT：分区扩容挂载插件（Web 界面一键格式化/扩容/挂载剩余存储）
+# ImmortalWRT：分区扩容挂载插件（Web 界面一键格式化/扩容/挂载剩余存储）
 UPDATE_PACKAGE "partexp" "sirpdboy/luci-app-partexp" "main" "pkg"
 
-# RivWRT：mwan3 多 WAN 负载均衡 / 故障切换
+# ImmortalWRT：mwan3 多 WAN 负载均衡 / 故障切换
 #
 # ★★ 版本必须区分清楚，这里用的是 dl12345 的 nftables 移植版，不是 feeds 里的旧版：
 #      feeds（immortalwrt/openwrt packages）  mwan3 2.12.2 = iptables + ipset 时代
@@ -154,7 +154,7 @@ UPDATE_PACKAGE "partexp" "sirpdboy/luci-app-partexp" "main" "pkg"
 #    它只扫 ../feeds/ 不扫当前目录，故不会误删刚克隆的包。
 # Dual WAN 已停用；保留包来源记录，需要恢复时再取消注释。
 # UPDATE_PACKAGE "mwan3" "dl12345/mwan3" "openwrt-25.12"
-# RivWRT：mwan3 的 LuCI 界面（同作者的 nftables 移植版）
+# ImmortalWRT：mwan3 的 LuCI 界面（同作者的 nftables 移植版）
 # ★ 必须与后端同源：feeds 里的 luci-app-mwan3 配的是 2.x 的配置结构，
 #   与 3.6.12 的后端不匹配。
 # UPDATE_PACKAGE "luci-app-mwan3" "dl12345/luci-app-mwan3" "openwrt-25.12"

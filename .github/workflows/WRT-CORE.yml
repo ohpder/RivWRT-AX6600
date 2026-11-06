@@ -102,15 +102,15 @@ jobs:
       - name: Initialization Values
         run: |
           echo "WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d-%H.%M.%S")" >> $GITHUB_ENV
-          echo "WRT_MARK=RivWRT" >> $GITHUB_ENV  # 状态页编译标识品牌化（上游默认取 GitHub 用户名）
+          echo "WRT_MARK=ImmortalWRT" >> $GITHUB_ENV  # 状态页编译标识品牌化（上游默认取 GitHub 用户名）
           WRT_PROFILE_UPPER=$(echo "${WRT_PROFILE:-PURE}" | tr '[:lower:]' '[:upper:]')
           case "$WRT_PROFILE_UPPER" in
-            PURE|PLUS|RIVWRT) ;;
+            PURE|PLUS|ImmortalWRT) ;;
             *) echo "Unsupported WRT_PROFILE: $WRT_PROFILE" >&2; exit 1 ;;
           esac
           echo "WRT_PROFILE=$WRT_PROFILE_UPPER" >> $GITHUB_ENV
-          if [[ "$WRT_PROFILE_UPPER" == "RIVWRT" ]]; then
-            echo "WRT_PROFILE_DESC=RivWRT 定制版：基于 $WRT_SOURCE 基座，集成 aurora 主题、Athena LED 点阵屏控制、bandix-plus 流量统计（eBPF 旁路观察）、daede（dae eBPF 透明代理）、Podman 容器环境与 wolplus 网络唤醒；直连流量满血 NSS 硬件加速，代理流量由 dae 内核态接管" >> $GITHUB_ENV
+          if [[ "$WRT_PROFILE_UPPER" == "ImmortalWRT" ]]; then
+            echo "WRT_PROFILE_DESC=ImmortalWRT 定制版：基于 $WRT_SOURCE 基座，集成 aurora 主题、Athena LED 点阵屏控制、bandix-plus 流量统计（eBPF 旁路观察）、daede（dae eBPF 透明代理）、Podman 容器环境与 wolplus 网络唤醒；直连流量满血 NSS 硬件加速，代理流量由 dae 内核态接管" >> $GITHUB_ENV
           else
             echo "WRT_PROFILE_DESC=纯净版，轻量稳定，仅含基础网络与常用管理插件，扩展插件按需自行安装" >> $GITHUB_ENV
           fi
@@ -390,7 +390,7 @@ jobs:
             - 通用：地区 US，发射功率 24 dBm，加密 WPA2-PSK（CCMP 算法）
             ━━━━━━━━━━━━━━━━━━━━━━━
             📥 下载与刷机说明
-            - 本 Release 为 RivWRT 定制版固件（编译机制与源码基座：${{ env.WRT_SOURCE }}）
+            - 本 Release 为 ImmortalWRT 定制版固件（编译机制与源码基座：${{ env.WRT_SOURCE }}）
             - 首次从原厂固件刷入：选文件名带 factory 的文件
             - 已是 OpenWrt/ImmortalWrt 升级：选文件名带 sysupgrade 的文件
             - 刷机 / 救砖完整教程：[刷机救砖教程](${{ github.server_url }}/${{ github.repository }}/blob/main/Docs/刷机救砖教程.md)

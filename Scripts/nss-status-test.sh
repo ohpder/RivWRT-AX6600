@@ -1,5 +1,5 @@
 #!/bin/sh
-# RivWRT nss-status 后端解析的回归测试。
+# ImmortalWRT nss-status 后端解析的回归测试。
 #
 # 用法：  sh Scripts/nss-status-test.sh
 #
@@ -36,7 +36,7 @@ trap 'rm -rf "$MOCK"' EXIT INT TERM
 # 从 Settings.sh 的 heredoc 里取出 nss-status 全文
 extract_nss_status() {
 	awk '
-		/cat > \$PKGDIR\/root\/usr\/libexec\/rivwrt\/nss-status <<.EOF./ { f = 1; next }
+		/cat > \$PKGDIR\/root\/usr\/libexec\/ImmortalWRT\/nss-status <<.EOF./ { f = 1; next }
 		f && /^EOF$/ { exit }
 		f { print }
 	' "$SH"

@@ -29,12 +29,12 @@ on:
         required: false
         type: string
       PROFILE:
-        description: '固件版本：RivWRT 定制版。'
-        default: 'RIVWRT'
+        description: '固件版本：ImmortalWRT 定制版。'
+        default: 'ImmortalWRT'
         required: true
         type: choice
         options:
-          - RIVWRT
+          - ImmortalWRT
       TEST:
         description: '仅输出配置文件，不编译固件。'
         default: 'true'
@@ -58,9 +58,9 @@ jobs:
       #默认主题
       WRT_THEME: aurora
       #默认主机名
-      WRT_NAME: RivWRT
+      WRT_NAME: ImmortalWRT
       #默认WIFI名称
-      WRT_SSID: RivWRT
+      WRT_SSID: ImmortalWRT
       #默认WIFI密码
       WRT_WORD: ''  # WiFi 默认开放无密码
       #默认地址

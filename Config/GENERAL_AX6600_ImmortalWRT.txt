@@ -1,5 +1,5 @@
 # =============================================
-# RivWRT 增量配置
+# ImmortalWRT 增量配置
 #
 # 叠加在 Config/GENERAL_AX6600.txt（通用基座）之上，
 # 由 WRT-CORE.yml 按 GENERAL_AX6600_${PROFILE}.txt 规则自动拼接，
@@ -8,7 +8,7 @@
 # 设备：JDCloud RE-CS-02（京东云 AX6600 雅典娜）
 # 平台：Qualcomm IPQ6010 / qualcommax-ipq60xx
 # 适配分区：12M 内核 + 2G rootfs（chenxin527/uboot-qsdk12.5-build）
-# 固件品牌：banner / openwrt_release / 状态页的发行版 ID 显示为 RivWRT
+# 固件品牌：banner / openwrt_release / 状态页的发行版 ID 显示为 ImmortalWRT
 CONFIG_VERSION_DIST="ImmortalWRT"
 
 # =============================================
@@ -90,7 +90,7 @@ CONFIG_PACKAGE_collectd-mod-exec=y
 CONFIG_PACKAGE_rrdtool1=y
 
 # NSS 加速管理页（自建包：开关 + 每 Core 负载）
-CONFIG_PACKAGE_luci-app-rivwrt-nss=y
+CONFIG_PACKAGE_luci-app-ImmortalWRT-nss=y
 
 
 

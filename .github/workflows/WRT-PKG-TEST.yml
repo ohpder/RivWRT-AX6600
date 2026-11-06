@@ -68,7 +68,7 @@ jobs:
           cd ./wrt/
           cat $GITHUB_WORKSPACE/Config/IPQ60XX-WIFI-YES.txt \
               $GITHUB_WORKSPACE/Config/GENERAL_AX6600.txt \
-              $GITHUB_WORKSPACE/Config/GENERAL_AX6600_RIVWRT.txt >> .config
+              $GITHUB_WORKSPACE/Config/GENERAL_AX6600_ImmortalWRT.txt >> .config
           $GITHUB_WORKSPACE/Scripts/Settings.sh
           make defconfig -j$(nproc)
 
